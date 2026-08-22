@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Trip, StopActivity, DaySchedule } from './types';
 import { MOCK_TRIPS } from './mock-data';
 
@@ -30,8 +31,19 @@ interface ItineraryStore {
     newIndex: number;
   }) => void;
 
-  /** Add a new StopActivity to a stop/date. */
+  /** Add a new activity to a specific stop date. */
   addActivity: (params: { tripId: string; newSa: StopActivity }) => void;
+
+  /** Edit an existing activity's details. */
+  updateActivity: (params: {
+    tripId: string;
+    activityId: string;
+    name?: string;
+    category?: any;
+    scheduledTime?: string;
+    durationMinutes?: number;
+    costEstimate?: number;
+  }) => void;
 
   /** Remove an activity by id from any stop. */
   removeActivity: (params: { tripId: string; activityId: string }) => void;
@@ -41,18 +53,47 @@ interface ItineraryStore {
 
   /** Set the overall trip total budget. */
   setTotalBudget: (params: { tripId: string; amount: number }) => void;
+
+  /** Create a new custom trip. Returns new trip id. */
+  createTrip: (params: {
+    name: string;
+    cityName: string;
+    startDate: string;
+    endDate: string;
+    totalBudget?: number;
+  }) => string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function dateRange(start: string, end: string): string[] {
   const dates: string[] = [];
-  const d = new Date(start);
-  const e = new Date(end);
-  while (d <= e) {
+  let d = new Date(start);
+  let e = new Date(end);
+
+  if (isNaN(d.getTime())) d = new Date();
+  if (isNaN(e.getTime())) {
+    e = new Date(d);
+    e.setDate(e.getDate() + 3);
+  }
+
+  if (d > e) {
+    const temp = d;
+    d = e;
+    e = temp;
+  }
+
+  let count = 0;
+  while (d <= e && count < 60) {
     dates.push(d.toISOString().split('T')[0]);
     d.setDate(d.getDate() + 1);
+    count++;
   }
+
+  if (dates.length === 0) {
+    dates.push(new Date().toISOString().split('T')[0]);
+  }
+
   return dates;
 }
 
@@ -64,196 +105,362 @@ function dayLabel(date: string): string {
   });
 }
 
-// ─── Store ────────────────────────────────────────────────────────────────────
+function reassignSequentialTimes(activities: StopActivity[]): void {
+  let startHour = 9;
+  let startMinute = 0;
+
+  for (let i = 0; i < activities.length; i++) {
+    const hh = String(startHour).padStart(2, '0');
+    const mm = String(startMinute).padStart(2, '0');
+    activities[i].scheduledTime = `${hh}:${mm}`;
+
+    const duration = activities[i].activity?.durationMinutes || 60;
+    startMinute += duration;
+    if (startMinute >= 60) {
+      startHour += Math.floor(startMinute / 60);
+      startMinute = startMinute % 60;
+    }
+  }
+}
+
+// ─── Store Implementation with Persistence ────────────────────────────────────
 
 export const useItineraryStore = create<ItineraryStore>()(
-  immer((set, get) => ({
-    trips: { ...MOCK_TRIPS },
+  persist(
+    immer((set, get) => ({
+      trips: MOCK_TRIPS,
 
-    // ── Selectors ────────────────────────────────────────────────────────────
+      // ── Selectors ────────────────────────────────────────────────────────────
 
-    getTrip: (id) => get().trips[id],
+      getTrip: (id: string) => {
+        const state = get();
+        if (state.trips[id]) return state.trips[id];
 
-    getDaySchedules: (tripId) => {
-      const trip = get().trips[tripId];
-      if (!trip) return [];
+        // Fallback for dynamic trip IDs so "Trip Not Found" is never shown
+        if (id && id.startsWith('trip-')) {
+          const fallbackTrip: Trip = {
+            id,
+            userId: 'user-dev-b',
+            name: 'New Custom Adventure',
+            description: 'Custom Trip',
+            startDate: '2026-10-01',
+            endDate: '2026-10-07',
+            isPublic: false,
+            totalBudget: 1200,
+            stops: [
+              {
+                id: `stop-${id}`,
+                tripId: id,
+                city: {
+                  id: 'city-tokyo',
+                  name: 'Tokyo',
+                  country: 'Japan',
+                  lat: 35.6762,
+                  lng: 139.6503,
+                  costIndex: 150,
+                  popularityScore: 95,
+                },
+                orderIndex: 0,
+                arrivalDate: '2026-10-01',
+                departureDate: '2026-10-07',
+                scheduledActivities: [],
+              },
+            ],
+            budgetLines: [
+              { id: `bl-1-${id}`, tripId: id, category: 'transport', amount: 300 },
+              { id: `bl-2-${id}`, tripId: id, category: 'stay', amount: 400 },
+              { id: `bl-3-${id}`, tripId: id, category: 'activities', amount: 150 },
+              { id: `bl-4-${id}`, tripId: id, category: 'meals', amount: 150 },
+            ],
+          };
 
-      const allActivities = trip.stops.flatMap((s) => s.scheduledActivities);
+          set((s) => {
+            s.trips[id] = fallbackTrip;
+          });
+          return fallbackTrip;
+        }
+        return undefined;
+      },
 
-      // Group by date preserving user drag order
-      const byDate: Record<string, StopActivity[]> = {};
-      for (const sa of allActivities) {
-        (byDate[sa.scheduledDate] ??= []).push(sa);
-      }
+      getDaySchedules: (tripId: string) => {
+        const trip = get().getTrip(tripId);
+        if (!trip) return [];
 
-      // Cover all dates in trip range
-      const dates = dateRange(trip.startDate, trip.endDate);
+        const dates = dateRange(trip.startDate, trip.endDate);
 
-      return dates.map((date) => {
-        const stop =
-          trip.stops.find((s) => s.arrivalDate <= date && s.departureDate >= date) ??
-          trip.stops[0];
-        return {
-          date,
-          dayLabel: dayLabel(date),
-          stopId: stop?.id ?? '',
-          cityName: stop?.city.name ?? '',
-          activities: byDate[date] ?? [],
-        };
-      });
-    },
+        const allActivities: StopActivity[] = [];
+        for (const stop of trip.stops) {
+          allActivities.push(...stop.scheduledActivities);
+        }
 
-    getTotalActivities: (tripId) => {
-      const trip = get().trips[tripId];
-      return trip
-        ? trip.stops.reduce((n, s) => n + s.scheduledActivities.length, 0)
-        : 0;
-    },
+        return dates.map((date) => {
+          const dayActs = allActivities.filter((sa) => sa.scheduledDate === date);
+          return {
+            date,
+            dayLabel: dayLabel(date),
+            activities: dayActs,
+          };
+        });
+      },
 
-    getSpentTotal: (tripId) => {
-      const trip = get().trips[tripId];
-      if (!trip) return 0;
-      return trip.stops
-        .flatMap((s) => s.scheduledActivities)
-        .reduce((n, sa) => n + (sa.actualCost ?? sa.activity.costEstimate ?? 0), 0);
-    },
+      getTotalActivities: (tripId: string) => {
+        const trip = get().getTrip(tripId);
+        if (!trip) return 0;
+        return trip.stops.reduce((acc, stop) => acc + stop.scheduledActivities.length, 0);
+      },
 
-    // ── Mutations ────────────────────────────────────────────────────────────
+      getSpentTotal: (tripId: string) => {
+        const trip = get().getTrip(tripId);
+        if (!trip) return 0;
+        return trip.stops.reduce((acc, stop) => {
+          return (
+            acc +
+            stop.scheduledActivities.reduce(
+              (sum, sa) => sum + (sa.activity.costEstimate || 0),
+              0,
+            )
+          );
+        }, 0);
+      },
 
-    moveActivity: ({ activityId, toDate, beforeId }) => {
-      set((state) => {
-        for (const tripId of Object.keys(state.trips)) {
+      // ── Mutations ────────────────────────────────────────────────────────────
+
+      moveActivity: ({ activityId, toDate, beforeId }) => {
+        set((state) => {
+          let foundSa: StopActivity | null = null;
+
+          for (const tripId of Object.keys(state.trips)) {
+            const trip = state.trips[tripId];
+            for (const stop of trip.stops) {
+              const idx = stop.scheduledActivities.findIndex((a) => a.id === activityId);
+              if (idx !== -1) {
+                [foundSa] = stop.scheduledActivities.splice(idx, 1);
+                break;
+              }
+            }
+            if (foundSa) break;
+          }
+
+          if (!foundSa) return;
+
+          foundSa.scheduledDate = toDate;
+
+          let targetTripId: string | null = null;
+          let targetStop = null;
+
+          for (const tId of Object.keys(state.trips)) {
+            const trip = state.trips[tId];
+            const stop = trip.stops.find(
+              (s) => s.arrivalDate <= toDate && s.departureDate >= toDate,
+            );
+            if (stop) {
+              targetTripId = tId;
+              targetStop = stop;
+              break;
+            }
+          }
+
+          if (!targetStop) {
+            const firstTrip = Object.values(state.trips)[0];
+            targetStop = firstTrip?.stops[0];
+          }
+
+          if (!targetStop) return;
+
+          foundSa.stopId = targetStop.id;
+
+          const destActs = targetStop.scheduledActivities.filter(
+            (sa) => sa.scheduledDate === toDate,
+          );
+
+          if (beforeId) {
+            const beforeIdx = destActs.findIndex((sa) => sa.id === beforeId);
+            const globalBeforeIdx = targetStop.scheduledActivities.findIndex(
+              (sa) => sa.id === beforeId,
+            );
+            if (globalBeforeIdx !== -1) {
+              targetStop.scheduledActivities.splice(globalBeforeIdx, 0, foundSa);
+            } else {
+              targetStop.scheduledActivities.push(foundSa);
+            }
+          } else {
+            targetStop.scheduledActivities.push(foundSa);
+          }
+
+          const updatedDayActs = targetStop.scheduledActivities.filter(
+            (sa) => sa.scheduledDate === toDate,
+          );
+          reassignSequentialTimes(updatedDayActs);
+        });
+      },
+
+      reorderDayActivities: ({ tripId, date, oldIndex, newIndex }) => {
+        set((state) => {
           const trip = state.trips[tripId];
-          let found: StopActivity | null = null;
+          if (!trip) return;
 
-          // Remove from current position
+          for (const stop of trip.stops) {
+            const dayActs = stop.scheduledActivities.filter((sa) => sa.scheduledDate === date);
+
+            if (
+              oldIndex >= 0 &&
+              oldIndex < dayActs.length &&
+              newIndex >= 0 &&
+              newIndex < dayActs.length
+            ) {
+              const [movedItem] = dayActs.splice(oldIndex, 1);
+              dayActs.splice(newIndex, 0, movedItem);
+
+              reassignSequentialTimes(dayActs);
+
+              const otherDateActs = stop.scheduledActivities.filter(
+                (sa) => sa.scheduledDate !== date,
+              );
+              stop.scheduledActivities = [...otherDateActs, ...dayActs];
+              break;
+            }
+          }
+        });
+      },
+
+      addActivity: ({ tripId, newSa }) => {
+        set((state) => {
+          const trip = state.trips[tripId];
+          if (!trip) return;
+
+          let targetStop = trip.stops.find((s) => s.id === newSa.stopId);
+          if (!targetStop && trip.stops.length > 0) {
+            targetStop = trip.stops[0];
+          }
+          if (!targetStop) return;
+
+          targetStop.scheduledActivities.push(newSa);
+        });
+      },
+
+      updateActivity: ({
+        tripId,
+        activityId,
+        name,
+        category,
+        scheduledTime,
+        durationMinutes,
+        costEstimate,
+      }) => {
+        set((state) => {
+          const trip = state.trips[tripId];
+          if (!trip) return;
+          for (const stop of trip.stops) {
+            const sa = stop.scheduledActivities.find((a) => a.id === activityId);
+            if (sa) {
+              if (name !== undefined) sa.activity.name = name;
+              if (category !== undefined) sa.activity.category = category;
+              if (scheduledTime !== undefined) sa.scheduledTime = scheduledTime;
+              if (durationMinutes !== undefined) sa.activity.durationMinutes = durationMinutes;
+              if (costEstimate !== undefined) sa.activity.costEstimate = costEstimate;
+              break;
+            }
+          }
+        });
+      },
+
+      removeActivity: ({ tripId, activityId }) => {
+        set((state) => {
+          const trip = state.trips[tripId];
+          if (!trip) return;
           for (const stop of trip.stops) {
             const idx = stop.scheduledActivities.findIndex((sa) => sa.id === activityId);
             if (idx !== -1) {
-              found = { ...stop.scheduledActivities[idx] };
               stop.scheduledActivities.splice(idx, 1);
               break;
             }
           }
-          if (!found) continue;
+        });
+      },
 
-          found.scheduledDate = toDate;
-
-          // Insert into target stop
-          const targetStop =
-            trip.stops.find((s) => s.arrivalDate <= toDate && s.departureDate >= toDate) ??
-            trip.stops[0];
-
-          if (beforeId) {
-            const idx = targetStop.scheduledActivities.findIndex((sa) => sa.id === beforeId);
-            if (idx !== -1) {
-              targetStop.scheduledActivities.splice(idx, 0, found);
-            } else {
-              targetStop.scheduledActivities.push(found);
-            }
+      updateBudgetLine: ({ tripId, category, amount }) => {
+        set((state) => {
+          const trip = state.trips[tripId];
+          if (!trip) return;
+          const line = trip.budgetLines.find((bl) => bl.category === category);
+          if (line) {
+            line.amount = amount;
           } else {
-            targetStop.scheduledActivities.push(found);
+            trip.budgetLines.push({
+              id: `bl-${Date.now()}`,
+              tripId,
+              category: category as any,
+              amount,
+            });
           }
+        });
+      },
 
-          // Recalculate scheduledTimes for the target day so sequence reflects on View & Calendar!
-          const updatedDay = targetStop.scheduledActivities.filter((sa) => sa.scheduledDate === toDate);
-          let currentMinutes = 8 * 60;
-          for (const sa of updatedDay) {
-            const h = String(Math.floor(currentMinutes / 60)).padStart(2, '0');
-            const m = String(currentMinutes % 60).padStart(2, '0');
-            sa.scheduledTime = `${h}:${m}`;
-            currentMinutes += (sa.activity.durationMinutes || 60);
-          }
+      setTotalBudget: ({ tripId, amount }) => {
+        set((state) => {
+          const trip = state.trips[tripId];
+          if (trip) trip.totalBudget = amount;
+        });
+      },
+
+      createTrip: ({ name, cityName, startDate, endDate, totalBudget = 1000 }) => {
+        const id = `trip-${Date.now()}`;
+        const stopId = `stop-${Date.now()}`;
+        const cityId = `city-${cityName.toLowerCase().replace(/\s+/g, '-')}`;
+
+        let s = startDate;
+        let e = endDate;
+        if (new Date(s) > new Date(e)) {
+          s = endDate;
+          e = startDate;
         }
-      });
+
+        const newTrip: Trip = {
+          id,
+          userId: 'user-dev-b',
+          name,
+          description: `Adventure in ${cityName}`,
+          startDate: s,
+          endDate: e,
+          isPublic: false,
+          totalBudget,
+          stops: [
+            {
+              id: stopId,
+              tripId: id,
+              city: {
+                id: cityId,
+                name: cityName,
+                country: 'Destination',
+                lat: 40.7128,
+                lng: -74.0060,
+                costIndex: 120,
+                popularityScore: 90,
+              },
+              orderIndex: 0,
+              arrivalDate: s,
+              departureDate: e,
+              scheduledActivities: [],
+            },
+          ],
+          budgetLines: [
+            { id: `bl-1-${id}`, tripId: id, category: 'transport', amount: 300 },
+            { id: `bl-2-${id}`, tripId: id, category: 'stay', amount: 400 },
+            { id: `bl-3-${id}`, tripId: id, category: 'activities', amount: 150 },
+            { id: `bl-4-${id}`, tripId: id, category: 'meals', amount: 150 },
+          ],
+        };
+
+        set((state) => {
+          state.trips[id] = newTrip;
+        });
+
+        return id;
+      },
+    })),
+    {
+      name: 'globetrotter-itinerary-store',
+      storage: createJSONStorage(() => (typeof window !== 'undefined' ? localStorage : ({} as any))),
     },
-
-    reorderDayActivities: ({ tripId, date, oldIndex, newIndex }) => {
-      set((state) => {
-        const trip = state.trips[tripId];
-        if (!trip) return;
-
-        for (const stop of trip.stops) {
-          const dayItems = stop.scheduledActivities
-            .map((sa, i) => ({ sa, i }))
-            .filter(({ sa }) => sa.scheduledDate === date);
-
-          if (dayItems.length === 0) continue;
-
-          // Clamp indices
-          const from = Math.max(0, Math.min(oldIndex, dayItems.length - 1));
-          const to = Math.max(0, Math.min(newIndex, dayItems.length - 1));
-          if (from === to) return;
-
-          // Grab real array indices
-          const realFrom = dayItems[from].i;
-          const realTo = dayItems[to].i;
-
-          const [item] = stop.scheduledActivities.splice(realFrom, 1);
-          stop.scheduledActivities.splice(realTo, 0, item);
-
-          // Update times in order so sequence reflects in Timeline View & Calendar
-          const updatedDay = stop.scheduledActivities.filter((sa) => sa.scheduledDate === date);
-          let currentMinutes = 8 * 60;
-          for (const sa of updatedDay) {
-            const h = String(Math.floor(currentMinutes / 60)).padStart(2, '0');
-            const m = String(currentMinutes % 60).padStart(2, '0');
-            sa.scheduledTime = `${h}:${m}`;
-            currentMinutes += (sa.activity.durationMinutes || 60);
-          }
-        }
-      });
-    },
-
-    addActivity: ({ tripId, newSa }) => {
-      set((state) => {
-        const trip = state.trips[tripId];
-        if (!trip) return;
-        const targetStop =
-          trip.stops.find(
-            (s) => s.arrivalDate <= newSa.scheduledDate && s.departureDate >= newSa.scheduledDate,
-          ) ?? trip.stops[0];
-        if (targetStop) targetStop.scheduledActivities.push(newSa);
-      });
-    },
-
-    removeActivity: ({ tripId, activityId }) => {
-      set((state) => {
-        const trip = state.trips[tripId];
-        if (!trip) return;
-        for (const stop of trip.stops) {
-          const idx = stop.scheduledActivities.findIndex((sa) => sa.id === activityId);
-          if (idx !== -1) {
-            stop.scheduledActivities.splice(idx, 1);
-            break;
-          }
-        }
-      });
-    },
-
-    updateBudgetLine: ({ tripId, category, amount }) => {
-      set((state) => {
-        const trip = state.trips[tripId];
-        if (!trip) return;
-        const line = trip.budgetLines.find((bl) => bl.category === category);
-        if (line) {
-          line.amount = amount;
-        } else {
-          trip.budgetLines.push({
-            id: `bl-${Date.now()}`,
-            tripId,
-            category: category as any,
-            amount,
-          });
-        }
-      });
-    },
-
-    setTotalBudget: ({ tripId, amount }) => {
-      set((state) => {
-        const trip = state.trips[tripId];
-        if (trip) trip.totalBudget = amount;
-      });
-    },
-  })),
+  ),
 );

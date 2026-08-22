@@ -23,8 +23,8 @@ const CUSTOM_TOOLTIP = ({ active, payload }: any) => {
   if (!active || !payload?.length) return null;
   const { name, value } = payload[0].payload;
   return (
-    <div className="bg-[#FAFAF7] border-2 border-[#0D0D0D] px-3 py-1.5 rounded shadow-[3px_3px_0px_#0D0D0D] text-xs font-bold text-[#0D0D0D]">
-      {name}: <span className="text-[#E77A64]">{formatCurrency(value)}</span>
+    <div className="bg-white rounded-xl px-4 py-2 shadow-lg border border-slate-100 text-sm font-semibold text-slate-800">
+      {name}: <span className="text-[#4A7C77]">{formatCurrency(value)}</span>
     </div>
   );
 };
@@ -80,29 +80,32 @@ export function BudgetChart({
 
       <div className="space-y-6">
         {/* ── Set total budget ───────────────────────────────────────────── */}
-        <div className="nb-card p-5">
+        <div className="scrapbook-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 bg-[#F6D267] border-2 border-[#0D0D0D] rounded flex items-center justify-center shadow-[2px_2px_0px_#0D0D0D]">
-              <DollarSign size={16} className="text-[#0D0D0D]" />
+            <div className="w-8 h-8 bg-[#F6D267] rounded-xl flex items-center justify-center shadow-sm">
+              <DollarSign size={16} className="text-amber-800" />
             </div>
-            <h3 className="font-extrabold text-[#0D0D0D]">Total Trip Budget</h3>
+            <h3 className="font-extrabold text-slate-800">Total Trip Budget</h3>
           </div>
 
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#0D0D0D] font-bold text-sm" style={{ fontFamily: "var(--font-mono)" }}>$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
               <input
                 type="number"
                 value={budgetInput}
                 onChange={(e) => setBudgetInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSetBudget()}
                 placeholder="Enter total budget..."
-                className="nb-input pl-8"
+                className="w-full pl-8 pr-4 py-2.5 rounded-xl border-2 border-slate-100
+                           focus:border-[#8CBDB9] focus:outline-none focus:ring-2 focus:ring-[#8CBDB9]/20
+                           text-sm font-semibold transition-all bg-slate-50 text-slate-800"
               />
             </div>
             <button
               onClick={handleSetBudget}
-              className="nb-btn nb-btn-teal"
+              className="px-4 py-2.5 bg-[#4A7C77] hover:bg-[#3d6e69] text-white text-sm
+                         font-bold rounded-xl transition-all shadow-sm active:scale-95"
             >
               Set
             </button>
@@ -111,16 +114,16 @@ export function BudgetChart({
           {/* Budget meter */}
           {totalBudget > 0 && (
             <div className="mt-4">
-              <div className="flex justify-between text-xs font-bold text-[#0D0D0D] mb-1.5" style={{ fontFamily: "var(--font-mono)" }}>
-                <span>{formatCurrency(spent)} SPENT</span>
-                <span className={isOverBudget ? "text-red-600 font-black" : "text-[#0D0D0D]/70"}>
-                  {isOverBudget ? "OVER BUDGET!" : `${formatCurrency(totalBudget - spent)} REMAINING`}
+              <div className="flex justify-between text-xs font-medium text-slate-500 mb-1.5">
+                <span>{formatCurrency(spent)} spent</span>
+                <span className={isOverBudget ? "text-red-500 font-bold" : "text-slate-500"}>
+                  {isOverBudget ? "OVER BUDGET!" : `${formatCurrency(totalBudget - spent)} remaining`}
                 </span>
               </div>
-              <div className="h-4 bg-[#F0EDE6] rounded-md border-2 border-[#0D0D0D] overflow-hidden p-0.5">
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-sm transition-all duration-300 ${
-                    isOverBudget ? "bg-[#E77A64]" : "bg-[#8CBDB9]"
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isOverBudget ? "bg-red-400" : "bg-[#8CBDB9]"
                   }`}
                   style={{ width: `${Math.min(100, (spent / totalBudget) * 100)}%` }}
                 />
@@ -131,12 +134,12 @@ export function BudgetChart({
 
         {/* ── Pie chart ───────────────────────────────────────────────────── */}
         {pieData.length > 0 && (
-          <div className="nb-card p-5">
+          <div className="scrapbook-card p-5">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 bg-[#8CBDB9] border-2 border-[#0D0D0D] rounded flex items-center justify-center shadow-[2px_2px_0px_#0D0D0D]">
-                <TrendingUp size={16} className="text-[#0D0D0D]" />
+              <div className="w-8 h-8 bg-[#8CBDB9]/30 rounded-xl flex items-center justify-center">
+                <TrendingUp size={16} className="text-[#4A7C77]" />
               </div>
-              <h3 className="font-extrabold text-[#0D0D0D]">Spending Breakdown</h3>
+              <h3 className="font-extrabold text-slate-800">Spending Breakdown</h3>
             </div>
 
             <ResponsiveContainer width="100%" height={220}>
@@ -149,9 +152,8 @@ export function BudgetChart({
                   cy="50%"
                   innerRadius={55}
                   outerRadius={90}
-                  paddingAngle={4}
-                  stroke="#0D0D0D"
-                  strokeWidth={2}
+                  paddingAngle={3}
+                  strokeWidth={0}
                 >
                   {pieData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
@@ -164,33 +166,33 @@ export function BudgetChart({
             {/* Itemised list */}
             <div className="space-y-2 mt-2">
               {pieData.map((entry, i) => (
-                <div key={i} className="flex items-center justify-between p-1.5 rounded border border-[#0D0D0D]/20 bg-[#F0EDE6]">
+                <div key={i} className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div
-                      className="w-3 h-3 border border-[#0D0D0D] rounded-sm flex-shrink-0"
+                      className="w-3 h-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: entry.color }}
                     />
-                    <span className="text-xs font-bold text-[#0D0D0D]">
+                    <span className="text-sm text-slate-600 font-medium">
                       {entry.emoji} {entry.name}
                     </span>
                   </div>
-                  <span className="text-xs font-black text-[#0D0D0D]" style={{ fontFamily: "var(--font-mono)" }}>
+                  <span className="text-sm font-bold text-slate-800">
                     {formatCurrency(entry.value)}
                   </span>
                 </div>
               ))}
 
-              <div className="border-t-2 border-[#0D0D0D] pt-2 flex justify-between">
-                <span className="text-xs font-extrabold text-[#0D0D0D] uppercase tracking-wider" style={{ fontFamily: "var(--font-mono)" }}>Total</span>
-                <span className="text-sm font-black text-[#E77A64]" style={{ fontFamily: "var(--font-mono)" }}>{formatCurrency(spent)}</span>
+              <div className="border-t border-slate-100 pt-2 flex justify-between">
+                <span className="text-sm font-bold text-slate-700">Total</span>
+                <span className="text-sm font-bold text-[#4A7C77]">{formatCurrency(spent)}</span>
               </div>
             </div>
           </div>
         )}
 
         {/* ── Per-category edit ───────────────────────────────────────────── */}
-        <div className="nb-card p-5">
-          <h3 className="font-extrabold text-[#0D0D0D] mb-3">Edit Budget Lines</h3>
+        <div className="scrapbook-card p-5">
+          <h3 className="font-extrabold text-slate-800 mb-3">Edit Budget Lines</h3>
           <div className="space-y-3">
             {(["transport", "stay", "activities", "meals"] as BudgetCategory[]).map((cat) => {
               const meta = BUDGET_CATEGORY_META[cat];
@@ -198,14 +200,15 @@ export function BudgetChart({
               return (
                 <div key={cat} className="flex items-center gap-3">
                   <span className="text-base">{meta.emoji}</span>
-                  <span className="text-xs font-bold text-[#0D0D0D] w-24 uppercase" style={{ fontFamily: "var(--font-mono)" }}>{meta.label}</span>
+                  <span className="text-sm font-medium text-slate-600 w-24">{meta.label}</span>
                   <div className="relative flex-1">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#0D0D0D] text-xs font-bold" style={{ fontFamily: "var(--font-mono)" }}>$</span>
+                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                     <input
                       type="number"
                       defaultValue={current}
                       onBlur={(e) => onUpdateLine(cat, parseFloat(e.target.value) || 0)}
-                      className="nb-input pl-6 py-1 text-xs"
+                      className="w-full pl-6 pr-2 py-1.5 text-sm rounded-lg border border-slate-200
+                                 focus:border-[#8CBDB9] focus:outline-none bg-slate-50 font-semibold text-slate-800"
                     />
                   </div>
                 </div>

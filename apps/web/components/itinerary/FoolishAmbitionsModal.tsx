@@ -50,7 +50,7 @@ export function FoolishAmbitionsModal({
   const modalContent = (
     <div
       className="fixed inset-0 z-[99999] flex items-center justify-center animate-fade-in p-4"
-      style={{ background: "rgba(13, 13, 13, 0.85)", backdropFilter: "blur(4px)" }}
+      style={{ background: "rgba(15, 23, 42, 0.65)", backdropFilter: "blur(6px)" }}
       onClick={onClose}
     >
       {/* Modal content container */}
@@ -58,18 +58,12 @@ export function FoolishAmbitionsModal({
         className="relative max-w-md w-full text-center animate-slide-up"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Neobrutalist border box matching overall app theme */}
+        {/* Soft rounded Scrapbook card matching Developer A theme */}
         <div
-          className="relative p-6 sm:p-8 rounded-xl bg-[#FAFAF7] border-4 border-[#0D0D0D]"
-          style={{
-            boxShadow: "10px 10px 0px #0D0D0D",
-          }}
+          className="relative p-6 sm:p-8 rounded-3xl bg-white border-4 border-white shadow-2xl"
         >
           {/* Top header badge */}
-          <div
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border-2 border-[#0D0D0D] bg-[#E77A64] text-[#FAFAF7] font-black text-xs uppercase tracking-widest mb-4"
-            style={{ fontFamily: "var(--font-mono)", boxShadow: "2px 2px 0px #0D0D0D" }}
-          >
+          <div className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#E77A64] text-white font-extrabold text-xs uppercase tracking-wider mb-4 shadow-sm">
             <ShieldAlert size={14} />
             <span>Notice of Folly</span>
           </div>
@@ -77,53 +71,41 @@ export function FoolishAmbitionsModal({
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-md bg-[#FAFAF7] border-2 border-[#0D0D0D] flex items-center justify-center
-                       shadow-[2px_2px_0px_#0D0D0D] hover:translate-x-0.5 hover:translate-y-0.5 transition-all text-[#0D0D0D]"
+            className="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center
+                       shadow-sm hover:shadow-md transition-all text-slate-500 hover:text-slate-800"
           >
             <X size={18} />
           </button>
 
-          {/* Main dramatic text in app font */}
-          <h2
-            className="text-2xl sm:text-3xl font-black leading-tight mb-2 text-[#0D0D0D] uppercase tracking-tight"
-            style={{
-              fontFamily: "var(--font-sans)",
-            }}
-          >
+          {/* Main dramatic text in Playfair Display serif font */}
+          <h2 className="text-2xl sm:text-3xl font-black leading-tight mb-2 text-slate-900 font-serif tracking-tight">
             PUT THESE FOOLISH
             <br />
             <span className="text-[#E77A64]">AMBITIONS TO REST</span>
           </h2>
 
-          <p
-            className="text-xs sm:text-sm mt-2 mb-5 leading-relaxed font-semibold text-[#0D0D0D]/80"
-          >
+          <p className="text-xs sm:text-sm mt-2 mb-5 leading-relaxed font-semibold text-slate-600">
             Thou art not yet mighty enough to walk this path.
             <br />
             Return when your coffers are worthy of{" "}
-            <span className="font-extrabold text-[#0D0D0D] underline decoration-[#E77A64] decoration-2">{cityName}</span>.
+            <span className="font-extrabold text-[#4A7C77]">{cityName}</span>.
           </p>
 
           {/* Budget comparison container */}
-          <div
-            className="rounded-lg p-3.5 mb-5 text-left space-y-2 border-2 border-[#0D0D0D] bg-[#F0EDE6]"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
-            <div className="flex justify-between text-xs">
-              <span className="font-bold text-[#0D0D0D]/60">YOUR DAILY BUDGET</span>
-              <span className="font-black text-[#E77A64]">{formatCurrency(dailyEntered)}/day</span>
+          <div className="rounded-2xl p-4 mb-6 text-left space-y-2 border border-slate-100 bg-[#E5F0EF]/50">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-500">YOUR DAILY BUDGET</span>
+              <span className="text-[#E77A64]">{formatCurrency(dailyEntered)}/day</span>
             </div>
-            <div className="flex justify-between text-xs">
-              <span className="font-bold text-[#0D0D0D]/60">MINIMUM REQUIRED</span>
-              <span className="font-black text-[#4A7C77]">
+            <div className="flex justify-between text-xs font-bold">
+              <span className="text-slate-500">MINIMUM REQUIRED</span>
+              <span className="text-[#4A7C77]">
                 {formatCurrency(dailyMin)}/day
               </span>
             </div>
-            <div
-              className="border-t-2 border-[#0D0D0D]/20 pt-2 flex justify-between text-xs"
-            >
-              <span className="font-bold text-[#0D0D0D]/70">YOU NEED AT LEAST</span>
-              <span className="font-black text-[#0D0D0D]">
+            <div className="border-t border-slate-200/80 pt-2 flex justify-between text-xs font-bold">
+              <span className="text-slate-600">YOU NEED AT LEAST</span>
+              <span className="text-slate-900">
                 {formatCurrency(suggestedMinBudget)} total ({ratio}× more)
               </span>
             </div>
@@ -132,9 +114,9 @@ export function FoolishAmbitionsModal({
           {/* Play voice button */}
           <button
             onClick={playMorgottVoice}
-            className="nb-btn nb-btn-yellow w-full mb-4 text-xs py-2 flex items-center justify-center gap-2"
+            className="w-full mb-4 py-2.5 px-4 rounded-xl text-xs font-bold bg-[#F6D267] text-slate-800 hover:bg-[#f3ca51] transition-all shadow-sm flex items-center justify-center gap-2"
           >
-            <Volume2 size={14} />
+            <Volume2 size={15} />
             <span>Replay Morgott's Warning</span>
           </button>
 
@@ -142,15 +124,15 @@ export function FoolishAmbitionsModal({
           <div className="flex gap-2.5">
             <button
               onClick={onClose}
-              className="nb-btn nb-btn-ghost flex-1 py-2.5 text-xs"
+              className="flex-1 py-3 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all"
             >
               I understand
             </button>
             <button
               onClick={onIncreaseBudget}
-              className="nb-btn nb-btn-coral flex-1 py-2.5 text-xs"
+              className="flex-1 py-3 rounded-xl text-xs font-black bg-[#4A7C77] hover:bg-[#3d6e69] text-white shadow-md transition-all active:scale-95"
             >
-              ⚔️ Fix Budget
+              Fix Budget
             </button>
           </div>
         </div>

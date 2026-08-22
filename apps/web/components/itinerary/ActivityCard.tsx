@@ -5,23 +5,23 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
   Plane, Hotel, Landmark, Utensils, ShoppingBag, Music, MapPin,
-  Clock, Timer, Trash2, GripVertical,
+  Clock, Trash2, GripVertical, Pencil,
 } from "lucide-react";
 import type { StopActivity, ActivityCategory } from "@/lib/itinerary/types";
 
-// ─── Category config ──────────────────────────────────────────────────────────
+// ─── Category Config ──────────────────────────────────────────────────────────
 
 const CATEGORY_CFG: Record<
   ActivityCategory,
-  { icon: React.ElementType; bg: string; border: string; iconColor: string; label: string }
+  { icon: React.ElementType; bg: string; text: string; label: string }
 > = {
-  transport:     { icon: Plane,       bg: "#E77A64", border: "#E77A64", iconColor: "#FAFAF7", label: "Transport" },
-  accommodation: { icon: Hotel,       bg: "#EC4899", border: "#EC4899", iconColor: "#FAFAF7", label: "Stay" },
-  sightseeing:   { icon: Landmark,    bg: "#8CBDB9", border: "#8CBDB9", iconColor: "#0D0D0D", label: "Sights" },
-  food:          { icon: Utensils,    bg: "#86EFAC", border: "#86EFAC", iconColor: "#0D0D0D", label: "Food" },
-  shopping:      { icon: ShoppingBag, bg: "#F6D267", border: "#F6D267", iconColor: "#0D0D0D", label: "Shop" },
-  entertainment: { icon: Music,       bg: "#C084FC", border: "#C084FC", iconColor: "#0D0D0D", label: "Show" },
-  other:         { icon: MapPin,      bg: "#CBD5E1", border: "#CBD5E1", iconColor: "#0D0D0D", label: "Other" },
+  transport:     { icon: Plane,       bg: "bg-[#E77A64]", text: "text-white",       label: "Transport" },
+  accommodation: { icon: Hotel,       bg: "bg-[#EC4899]", text: "text-white",       label: "Stay" },
+  sightseeing:   { icon: Landmark,    bg: "bg-[#8CBDB9]", text: "text-slate-900",   label: "Sights" },
+  food:          { icon: Utensils,    bg: "bg-[#86EFAC]", text: "text-emerald-950", label: "Food" },
+  shopping:      { icon: ShoppingBag, bg: "bg-[#F6D267]", text: "text-amber-950",   label: "Shop" },
+  entertainment: { icon: Music,       bg: "bg-[#C084FC]", text: "text-purple-950",  label: "Show" },
+  other:         { icon: MapPin,      bg: "bg-slate-200",  text: "text-slate-800",   label: "Other" },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -46,10 +46,11 @@ function durationLabel(minutes: number): string {
 interface BoardCardProps {
   stopActivity: StopActivity;
   onRemove?: (id: string) => void;
+  onEdit?: (sa: StopActivity) => void;
   isDragOverlay?: boolean;
 }
 
-function BoardCard({ stopActivity, onRemove, isDragOverlay = false }: BoardCardProps) {
+function BoardCard({ stopActivity, onRemove, onEdit, isDragOverlay = false }: BoardCardProps) {
   const { activity, scheduledTime, id } = stopActivity;
   const cfg = CATEGORY_CFG[activity.category] ?? CATEGORY_CFG.other;
   const Icon = cfg.icon;
@@ -61,7 +62,6 @@ function BoardCard({ stopActivity, onRemove, isDragOverlay = false }: BoardCardP
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
-    boxShadow: isDragOverlay ? "5px 5px 0px #0D0D0D" : "2.5px 2.5px 0px #0D0D0D",
   };
 
   return (
@@ -71,77 +71,90 @@ function BoardCard({ stopActivity, onRemove, isDragOverlay = false }: BoardCardP
       {...attributes}
       {...listeners}
       className={`
-        relative rounded-lg bg-[#FAFAF7] border-[1.5px] border-[#0D0D0D]
-        p-3 group select-none cursor-grab active:cursor-grabbing
-        ${isDragging && !isDragOverlay ? "dragging-card" : ""}
-        ${isDragOverlay ? "drag-overlay-card bg-[#F6D267]" : "hover:-translate-y-0.5 transition-all duration-100"}
+        relative rounded-2xl bg-white border border-slate-100 p-3.5 shadow-sm group select-none cursor-grab active:cursor-grabbing
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
+        ${isDragging && !isDragOverlay ? "dragging-card opacity-30" : ""}
+        ${isDragOverlay ? "drag-overlay-card shadow-2xl ring-2 ring-[#4A7C77]" : ""}
       `}
     >
-      {/* Visible Drag handle indicator */}
-      <div
-        className="absolute top-2.5 right-2 opacity-40 group-hover:opacity-100
-                   text-[#0D0D0D] transition-opacity p-0.5 pointer-events-none"
-      >
-        <GripVertical size={16} />
-      </div>
-
-      {/* Content */}
-      <p className="text-xs font-bold text-[#0D0D0D] leading-snug pr-6 line-clamp-2">
-        {activity.name}
-      </p>
-
-      <div className="flex items-center gap-2 mt-2.5 flex-wrap">
-        {/* Category pill */}
-        <span
-          className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase px-2 py-0.5 rounded border border-[#0D0D0D]"
-          style={{
-            backgroundColor: cfg.bg,
-            color: cfg.iconColor,
-            fontFamily: "var(--font-mono)",
-          }}
+      {/* Top Section: Category Icon Box + Title + Grip */}
+      <div className="flex items-start gap-3">
+        {/* Category Icon Box */}
+        <div
+          className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${cfg.bg}`}
+          title={cfg.label}
         >
-          <Icon size={12} />
-          {cfg.label}
-        </span>
+          <Icon size={18} className={cfg.text} />
+        </div>
 
-        {/* Time */}
-        <span className="flex items-center gap-1 text-[11px] font-bold text-[#0D0D0D]/75" style={{ fontFamily: "var(--font-mono)" }}>
-          <Clock size={12} />
-          {scheduledTime}
-        </span>
-
-        {/* Duration */}
-        <span className="flex items-center gap-1 text-[11px] font-bold text-[#0D0D0D]/75" style={{ fontFamily: "var(--font-mono)" }}>
-          <Timer size={12} />
-          {durationLabel(activity.durationMinutes)}
-        </span>
-
-        {/* Cost */}
-        {activity.costEstimate > 0 && (
-          <span
-            className="text-[10px] font-black text-[#0D0D0D] ml-auto bg-[#F6D267] px-1.5 py-0.5 rounded border border-[#0D0D0D]"
-            style={{ fontFamily: "var(--font-mono)" }}
-          >
-            ${activity.costEstimate}
+        {/* Title */}
+        <div className="flex-1 min-w-0 pr-1">
+          <p className="text-sm font-bold text-slate-800 leading-snug line-clamp-2">
+            {activity.name}
+          </p>
+          <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">
+            {cfg.label}
           </span>
-        )}
+        </div>
+
+        {/* Drag Handle */}
+        <div className="text-slate-300 group-hover:text-slate-500 transition-colors pt-0.5 flex-shrink-0">
+          <GripVertical size={16} />
+        </div>
       </div>
 
-      {/* Remove button */}
-      {onRemove && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove(id);
-          }}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100
-                     hover:text-red-600 text-[#0D0D0D]/50 transition-opacity p-1 cursor-pointer"
-          aria-label="Remove activity"
-        >
-          <Trash2 size={14} />
-        </button>
-      )}
+      {/* Bottom Footer Row: Time, Cost, & Edit/Delete Actions (No absolute overlapping!) */}
+      <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100">
+        {/* Scheduled Time & Duration */}
+        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+          <Clock size={13} className="text-slate-400" />
+          <span>{scheduledTime}</span>
+          <span className="text-slate-300">•</span>
+          <span className="text-slate-400 font-semibold">{durationLabel(activity.durationMinutes)}</span>
+        </div>
+
+        {/* Right Action Controls & Cost Badge */}
+        <div className="flex items-center gap-2">
+          {/* Cost Badge */}
+          {activity.costEstimate > 0 && (
+            <span className="text-xs font-black text-[#4A7C77] bg-[#E5F0EF] px-2.5 py-0.5 rounded-full">
+              ${activity.costEstimate}
+            </span>
+          )}
+
+          {/* Edit Button */}
+          {onEdit && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(stopActivity);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1 rounded-lg text-slate-400 hover:text-[#4A7C77] hover:bg-slate-100 transition-all cursor-pointer"
+              aria-label="Edit activity"
+              title="Edit event"
+            >
+              <Pencil size={14} />
+            </button>
+          )}
+
+          {/* Remove Button */}
+          {onRemove && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(id);
+              }}
+              onPointerDown={(e) => e.stopPropagation()}
+              className="p-1 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all cursor-pointer"
+              aria-label="Remove activity"
+              title="Delete event"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -162,61 +175,58 @@ function TimelineCard({ stopActivity, completed = false }: TimelineCardProps) {
   return (
     <div
       className={`
-        flex items-center gap-4 bg-[#FAFAF7] rounded-lg p-3.5
-        border-[1.5px] border-[#0D0D0D]
-        transition-all duration-150 hover:-translate-y-0.5
+        flex items-center gap-4 bg-white rounded-2xl p-4
+        border border-slate-100 shadow-sm
+        transition-all duration-200 hover:shadow-md hover:-translate-y-0.5
         ${completed ? "opacity-60" : ""}
       `}
-      style={{ boxShadow: "3px 3px 0px #0D0D0D" }}
     >
-      {/* Category icon box (increased icon size to 22px) */}
+      {/* Category Icon Box */}
       <div
-        className="w-11 h-11 rounded-md border-[1.5px] border-[#0D0D0D] flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: cfg.bg }}
+        className={`w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-sm ${cfg.bg}`}
       >
-        <Icon size={22} style={{ color: cfg.iconColor }} />
+        <Icon size={22} className={cfg.text} />
       </div>
 
-      {/* Name + category */}
+      {/* Name + Category */}
       <div className="flex-1 min-w-0">
-        <p className="font-bold text-[#0D0D0D] text-sm leading-snug truncate">
+        <p className="font-bold text-slate-800 text-sm leading-snug truncate">
           {activity.name}
         </p>
-        <span
-          className="inline-block text-[10px] font-black uppercase tracking-wider text-[#0D0D0D]/60 mt-0.5"
-          style={{ fontFamily: "var(--font-mono)" }}
-        >
+        <span className="inline-block text-xs font-bold text-slate-400 capitalize mt-0.5">
           {activity.category.replace("_", " ")}
         </span>
       </div>
 
       {/* Time range */}
-      <div className="text-right flex-shrink-0" style={{ fontFamily: "var(--font-mono)" }}>
-        <p className="text-xs font-bold text-[#0D0D0D]">{scheduledTime} - {endTime}</p>
-        <p className="text-[10px] font-medium text-[#0D0D0D]/60">{durationLabel(activity.durationMinutes)}</p>
+      <div className="text-right flex-shrink-0">
+        <p className="text-xs font-bold text-slate-700">{scheduledTime} - {endTime}</p>
+        <p className="text-[11px] font-semibold text-slate-400">{durationLabel(activity.durationMinutes)}</p>
       </div>
     </div>
   );
 }
 
-// ─── Public export ────────────────────────────────────────────────────────────
+// ─── Public Export ────────────────────────────────────────────────────────────
 
 interface ActivityCardProps {
   stopActivity: StopActivity;
   variant: "board" | "timeline";
   onRemove?: (id: string) => void;
+  onEdit?: (sa: StopActivity) => void;
   isDragOverlay?: boolean;
   completed?: boolean;
 }
 
 export function ActivityCard({
-  stopActivity, variant, onRemove, isDragOverlay, completed,
+  stopActivity, variant, onRemove, onEdit, isDragOverlay, completed,
 }: ActivityCardProps) {
   if (variant === "board") {
     return (
       <BoardCard
         stopActivity={stopActivity}
         onRemove={onRemove}
+        onEdit={onEdit}
         isDragOverlay={isDragOverlay}
       />
     );

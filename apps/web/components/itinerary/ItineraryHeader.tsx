@@ -17,14 +17,17 @@ interface ItineraryHeaderProps {
 }
 
 function formatDateRange(start: string, end: string): string {
-  const fmt = (d: string) =>
-    new Date(d).toLocaleDateString("en-GB", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    });
-  return `${fmt(start)} → ${fmt(end)}`;
+  const fmt = (d: string) => {
+    const dt = new Date(d);
+    return isNaN(dt.getTime())
+      ? d
+      : dt.toLocaleDateString("en-GB", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+  };
+  return `${fmt(start)} – ${fmt(end)}`;
 }
 
 const NAV_TABS = [
@@ -47,100 +50,75 @@ export function ItineraryHeader({
 
   return (
     <header
-      className="sticky top-0 z-40"
-      style={{
-        background: "#FAFAF7",
-        borderBottom: "2.5px solid #0D0D0D",
-        boxShadow: "0 4px 0px #0D0D0D",
-      }}
+      className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs"
     >
-      <div className="max-w-[1400px] mx-auto px-4 sm:px-6">
-        {/* ── Top row ─────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between py-3 gap-4 flex-wrap">
-          {/* Left: accent bar + trip name + dates */}
-          <div className="flex items-center gap-3 min-w-0">
-            {/* Thick accent bar */}
-            <div
-              className="hidden sm:block w-1.5 self-stretch rounded-sm flex-shrink-0"
-              style={{ background: "#E77A64", minHeight: "40px" }}
-            />
-            <div className="min-w-0">
-              <h1
-                className="text-2xl sm:text-3xl font-black text-[#0D0D0D] leading-none truncate tracking-tight"
-                style={{ fontFamily: "var(--font-sans)", letterSpacing: "-0.02em" }}
-              >
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-2 flex items-center justify-between gap-3 flex-wrap">
+        {/* Left: Compact Trip Title & Dates */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-2.5 flex-wrap">
+              <h1 className="text-lg sm:text-xl font-black text-[#4A7C77] leading-tight truncate tracking-tight font-serif">
                 {tripName}
               </h1>
-              <div
-                className="flex items-center gap-2 mt-1 text-xs text-[#0D0D0D]/60 font-medium"
-                style={{ fontFamily: "var(--font-mono)" }}
-              >
-                <span>{formatDateRange(startDate, endDate)}</span>
-              </div>
+              <span className="text-xs font-semibold text-slate-400">
+                {formatDateRange(startDate, endDate)}
+              </span>
             </div>
-          </div>
-
-          {/* Right: activity count + share */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {totalActivities !== undefined && (
-              <div
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold"
-                style={{
-                  background: "#F6D267",
-                  color: "#0D0D0D",
-                  border: "2px solid #0D0D0D",
-                  borderRadius: "6px",
-                  boxShadow: "2px 2px 0px #0D0D0D",
-                  fontFamily: "var(--font-mono)",
-                }}
-              >
-                <ListTodo size={12} />
-                {totalActivities} activities
-              </div>
-            )}
-            <button
-              className="nb-btn nb-btn-ghost flex items-center gap-1.5"
-              style={{ padding: "0.35rem 0.85rem" }}
-            >
-              <Share2 size={12} />
-              Share
-            </button>
           </div>
         </div>
 
-        {/* ── Page nav tabs ──────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between pb-3 gap-4 flex-wrap">
-          <div className="flex items-center gap-2">
-            {NAV_TABS.map((tab) => {
-              const isActive = pathname?.includes(`/${tab.id}`);
-              const Icon = tab.icon;
-              return (
-                <Link
-                  key={tab.id}
-                  href={tab.href(tripId)}
-                  className={`gt-tab flex items-center gap-1.5 ${isActive ? "active" : ""}`}
-                >
-                  <Icon size={12} />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </Link>
-              );
-            })}
-          </div>
+        {/* Center: Compact Nav Tabs (Builder / Viewer / Calendar) */}
+        <div className="flex items-center gap-1 bg-slate-100 p-0.5 rounded-full border border-slate-200/60">
+          {NAV_TABS.map((tab) => {
+            const isActive = pathname?.includes(`/${tab.id}`);
+            const Icon = tab.icon;
+            return (
+              <Link
+                key={tab.id}
+                href={tab.href(tripId)}
+                className={`px-3 py-1 rounded-full text-xs font-bold transition-all flex items-center gap-1.5 ${
+                  isActive
+                    ? "bg-[#4A7C77] text-white shadow-xs"
+                    : "text-slate-600 hover:text-[#4A7C77]"
+                }`}
+              >
+                <Icon size={13} />
+                <span>{tab.label}</span>
+              </Link>
+            );
+          })}
+        </div>
 
-          {/* Inner tabs */}
+        {/* Right: Activity Count Badge & Share */}
+        <div className="flex items-center gap-2 flex-shrink-0">
           {innerTabs && innerTabs.length > 0 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-slate-100 rounded-full p-0.5 mr-1">
               {innerTabs.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => onInnerTabChange?.(t.id)}
-                  className={`gt-tab ${activeInnerTab === t.id ? "active" : ""}`}
+                  className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
+                    activeInnerTab === t.id
+                      ? "bg-[#4A7C77] text-white"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
                 >
                   {t.label}
                 </button>
               ))}
             </div>
           )}
+
+          {totalActivities !== undefined && (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F6D267] text-slate-800 shadow-xs">
+              <ListTodo size={13} />
+              <span>{totalActivities} activities</span>
+            </div>
+          )}
+          <button className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 hover:bg-[#8CBDB9]/20 text-slate-700 hover:text-[#4A7C77] transition-all">
+            <Share2 size={13} />
+            <span>Share</span>
+          </button>
         </div>
       </div>
     </header>
