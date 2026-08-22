@@ -24,18 +24,51 @@ const SuggestionPolaroid = ({ delay, rotation }: { delay: string, rotation: stri
 );
 
 import { useRouter } from "next/navigation";
+import { fetchApi } from "@/lib/api";
 
 export default function CreateTripPage() {
   const router = useRouter();
   const [tripName, setTripName] = useState("");
-  const [place, setPlace] = useState("");
+  const [cityId, setCityId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [cities, setCities] = useState<{ id: string; name: string; country: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  React.useEffect(() => {
+    fetchApi("/cities").then(data => setCities(data)).catch(console.error);
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (tripName && place) {
-      router.push("/trips/demo-trip-1/build");
+    if (!tripName || !cityId || !startDate || !endDate) return alert("Please fill all fields");
+    
+    try {
+      setIsLoading(true);
+      // Create trip
+      const trip = await fetchApi("/trips", {
+        method: "POST",
+        body: JSON.stringify({
+          name: tripName,
+          startDate: new Date(startDate).toISOString(),
+          endDate: new Date(endDate).toISOString(),
+        })
+      });
+
+      // Add the selected city as the first stop
+      await fetchApi(`/trips/${trip.id}/stops`, {
+        method: "POST",
+        body: JSON.stringify({
+          cityId: cityId,
+          arrivalDate: new Date(startDate).toISOString(),
+          departureDate: new Date(endDate).toISOString(),
+        })
+      });
+
+      router.push(`/trips/${trip.id}/build`);
+    } catch (err: any) {
+      alert("Error: " + err.message);
+      setIsLoading(false);
     }
   };
 
@@ -84,19 +117,21 @@ export default function CreateTripPage() {
                   />
                 </div>
 
-                {/* Mapbox Stub Input */}
+                {/* City Selection */}
                 <div className="group pt-4">
                   <label className="block text-sm font-black uppercase tracking-widest text-slate-400 mb-2 group-focus-within:text-[#8CBDB9] transition-colors">Primary Destination</label>
                   <div className="relative flex items-center">
                     <MapPin className="absolute left-0 text-slate-400 group-focus-within:text-[#8CBDB9] transition-colors" size={24} />
-                    <input 
-                      type="text" 
-                      value={place}
-                      onChange={(e) => setPlace(e.target.value)}
-                      className="w-full pl-10 pr-4 py-2 bg-transparent border-b-4 border-slate-200 focus:border-[#8CBDB9] focus:outline-none transition-all font-serif text-2xl font-bold text-slate-700 placeholder-slate-300" 
-                      placeholder="Search a city..." 
-                    />
-                    {/* Note for Person B: Replace this input element with Mapbox Geocoder */}
+                    <select 
+                      value={cityId}
+                      onChange={(e) => setCityId(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-transparent border-b-4 border-slate-200 focus:border-[#8CBDB9] focus:outline-none transition-all font-serif text-2xl font-bold text-slate-700 appearance-none" 
+                    >
+                      <option value="" disabled>Select a city...</option>
+                      {cities.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}, {c.country}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -129,9 +164,9 @@ export default function CreateTripPage() {
                 </div>
 
                 <div className="pt-8">
-                  <button className="w-full flex justify-center items-center gap-3 bg-[#4A7C77] hover:bg-[#38605c] text-white text-xl font-black py-5 rounded-2xl shadow-[0_8px_0_#2D4C49] active:shadow-[0_0px_0_#2D4C49] active:translate-y-2 transition-all group">
+                  <button disabled={isLoading} className="w-full flex justify-center items-center gap-3 bg-[#4A7C77] hover:bg-[#38605c] text-white text-xl font-black py-5 rounded-2xl shadow-[0_8px_0_#2D4C49] active:shadow-[0_0px_0_#2D4C49] active:translate-y-2 transition-all group disabled:opacity-50">
                     <Sparkles size={24} className="group-hover:rotate-12 transition-transform" /> 
-                    Build Itinerary 
+                    {isLoading ? "Building..." : "Build Itinerary"}
                     <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform" />
                   </button>
                 </div>

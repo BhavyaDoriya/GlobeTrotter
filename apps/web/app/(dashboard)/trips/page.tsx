@@ -8,7 +8,7 @@ import { Search, SlidersHorizontal, MapPin, Calendar, ArrowRight, Compass, Plane
 // MODULAR COMPONENT: THE TRIP CARD
 // Person B can import this to use on the Profile or Calendar views!
 // ==========================================
-export const TripCard = ({ 
+const TripCard = ({ 
   id = 'demo-trip-1',
   title, 
   route, 

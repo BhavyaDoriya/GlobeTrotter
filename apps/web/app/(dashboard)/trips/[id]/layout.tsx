@@ -20,6 +20,31 @@ export default function TripLayout({ children, params }: LayoutProps) {
   const trip = getTrip(tripId);
   const totalActivities = getTotalActivities(tripId);
 
+  const setTrip = useItineraryStore((s) => s.setTrip);
+  const [isLoading, setIsLoading] = React.useState(!trip);
+
+  React.useEffect(() => {
+    if (!trip) {
+      import('@/lib/api').then(({ fetchApi }) => {
+        fetchApi(`/trips/${tripId}`)
+          .then((data) => {
+            setTrip(data);
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            console.error(err);
+            setIsLoading(false);
+          });
+      });
+    } else {
+      setIsLoading(false);
+    }
+  }, [tripId, trip, setTrip]);
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center p-4">Loading trip...</div>;
+  }
+
   if (!trip) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#E5F0EF] p-4">
@@ -32,10 +57,10 @@ export default function TripLayout({ children, params }: LayoutProps) {
             No trip with ID <code className="bg-slate-100 px-2 py-0.5 rounded text-slate-700">{tripId}</code> exists.
           </p>
           <a
-            href="/trips/demo-trip-1/build"
+            href="/"
             className="inline-block px-5 py-2.5 rounded-full bg-[#4A7C77] text-white font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-[#38605c] transition-colors"
           >
-            Go to Demo Trip
+            Go to Dashboard
           </a>
         </div>
       </div>

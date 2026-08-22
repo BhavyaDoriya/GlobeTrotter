@@ -8,6 +8,7 @@ import { TripsModule } from './trips/trips.module';
 import { StopsModule } from './stops/stops.module';
 import { ActivitiesModule } from './activities/activities.module';
 import { BudgetModule } from './budget/budget.module';
+import { CitiesModule } from './cities/cities.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
@@ -19,6 +20,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     StopsModule,
     ActivitiesModule,
     BudgetModule,
+    CitiesModule,
   ],
   providers: [
     PrismaService,

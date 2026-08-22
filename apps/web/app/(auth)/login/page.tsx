@@ -9,6 +9,8 @@ export default function IntroAndAuthPage() {
   const router = useRouter();
   const [showIntro, setShowIntro] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const enterSite = () => {
     if (isLeaving) return;
@@ -107,14 +109,34 @@ export default function IntroAndAuthPage() {
                 <p className="text-slate-500 font-medium">Log in to build your itinerary.</p>
               </div>
 
-              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
+              <form className="space-y-5" onSubmit={async (e) => {
+                e.preventDefault();
+                try {
+                  const res = await fetch("http://localhost:4000/api/auth/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, password }),
+                  });
+                  if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem("access_token", data.accessToken);
+                    router.push('/');
+                  } else {
+                    const data = await res.json();
+                    alert(`Error: ${data.message || 'Login failed'}`);
+                  }
+                } catch (err) {
+                  console.error(err);
+                  alert("Login failed");
+                }
+              }}>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="email">Email Address</label>
-                  <input type="email" id="email" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="traveler@world.com" />
+                  <input type="email" id="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="traveler@world.com" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="password">Password</label>
-                  <input type="password" id="password" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="••••••••" />
+                  <input type="password" id="password" value={password} onChange={e => setPassword(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="••••••••" />
                 </div>
                 
                 <div className="flex items-center justify-between mt-2">

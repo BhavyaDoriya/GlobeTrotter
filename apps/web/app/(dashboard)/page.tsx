@@ -1,12 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, SlidersHorizontal, MapPin, Calendar, Plus, Plane, Compass, Camera, Heart, ChevronDown } from "lucide-react";
+import { fetchApi } from "@/lib/api";
 
 export default function DashboardPage() {
-  // State to handle the interactive filter dropdown
   const [showFilters, setShowFilters] = useState(false);
+  const [trips, setTrips] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetchApi("/trips")
+      .then(data => setTrips(data))
+      .catch(console.error);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans pb-32 overflow-hidden selection:bg-[#F6D267] selection:text-slate-900">
@@ -26,8 +33,6 @@ export default function DashboardPage() {
       <div className="fixed bottom-40 left-10 animate-[bounce_8s_infinite] opacity-50 z-0 delay-150">
         <Camera size={48} className="text-[#E77A64] rotate-12" />
       </div>
-
-      
 
       <main className="relative z-10 container mx-auto px-4 lg:px-8 mt-12">
         
@@ -100,66 +105,51 @@ export default function DashboardPage() {
 
         {/* TICKET STUB STYLE FOR PREVIOUS TRIPS */}
         <section>
-          <h3 className="text-3xl font-extrabold text-[#4A7C77] font-serif mb-10">Your Travel Log</h3>
+          <div className="flex justify-between items-center mb-10">
+            <h3 className="text-3xl font-extrabold text-[#4A7C77] font-serif">Your Travel Log</h3>
+            <Link href="/trips/new" className="bg-[#E77A64] hover:bg-[#d66752] text-white px-6 py-2 rounded-full font-bold shadow-md transition-colors flex items-center gap-2">
+              <Plus size={18} /> New Trip
+            </Link>
+          </div>
           
-          <div className="flex flex-col lg:flex-row gap-8">
-            {/* Ticket 1 */}
-            <div className="group relative flex w-full max-w-2xl bg-[#FFFDF8] rounded-3xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.05)] border-4 border-white hover:-translate-y-2 transition-all duration-300">
-              <div className="w-6 bg-[#E77A64]"></div>
-              <div className="flex-1 p-6 relative">
-                <Plane size={120} className="absolute right-[-20px] bottom-[-20px] text-slate-100 rotate-[-15deg] pointer-events-none" />
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h4 className="text-2xl font-bold font-serif text-slate-800">Nordic Adventure</h4>
-                    <div className="flex items-center gap-2 text-sm font-bold text-[#8CBDB9] mt-2">
-                      <Calendar size={16} /> Aug 10 - Aug 18
+          <div className="flex flex-col lg:flex-row flex-wrap gap-8">
+            {trips.length === 0 && (
+               <div className="text-slate-500 italic p-8">No trips found. Click "New Trip" to start your journey!</div>
+            )}
+            {trips.map((trip, idx) => (
+              <div key={trip.id} className="group relative flex w-full max-w-2xl bg-[#FFFDF8] rounded-3xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.05)] border-4 border-white hover:-translate-y-2 transition-all duration-300">
+                <div className={`w-6 ${idx % 2 === 0 ? 'bg-[#E77A64]' : 'bg-[#F6D267]'}`}></div>
+                <div className="flex-1 p-6 relative">
+                  <Plane size={120} className="absolute right-[-20px] bottom-[-20px] text-slate-100 rotate-[-15deg] pointer-events-none" />
+                  <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <h4 className="text-2xl font-bold font-serif text-slate-800">{trip.name}</h4>
+                      <div className="flex items-center gap-2 text-sm font-bold text-[#8CBDB9] mt-2">
+                        <Calendar size={16} /> 
+                        {new Date(trip.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - 
+                        {new Date(trip.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </div>
+                    </div>
+                    <div className="bg-slate-800 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md rotate-3 group-hover:rotate-6 transition-transform">
+                      {new Date(trip.endDate) < new Date() ? 'Completed' : 'Upcoming'}
                     </div>
                   </div>
-                  <div className="bg-slate-800 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md rotate-3 group-hover:rotate-6 transition-transform">
-                    Completed
+                  
+                  <div className="flex items-center gap-2 mb-6 flex-wrap">
+                    {trip.stops?.map((stop: any, sIdx: number) => (
+                      <React.Fragment key={stop.id}>
+                        <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">{stop.city?.name || 'City'}</span>
+                        {sIdx < trip.stops.length - 1 && <span className="text-slate-300">→</span>}
+                      </React.Fragment>
+                    ))}
                   </div>
+                  
+                  <Link href={`/trips/${trip.id}/build`} className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
+                    Open Builder
+                  </Link>
                 </div>
-                
-                <div className="flex items-center gap-2 mb-6">
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Helsinki</span>
-                  <span className="text-slate-300">→</span>
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Turku</span>
-                  <span className="text-slate-300">→</span>
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Rovaniemi</span>
-                </div>
-                
-                <Link href="/trips/demo-trip-1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
-                  Open Scrapbook
-                </Link>
               </div>
-            </div>
-
-            {/* Ticket 2 */}
-            <div className="group relative flex w-full max-w-2xl bg-[#FFFDF8] rounded-3xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.05)] border-4 border-white hover:-translate-y-2 transition-all duration-300">
-              <div className="w-6 bg-[#F6D267]"></div>
-              <div className="flex-1 p-6 relative">
-                <Plane size={120} className="absolute right-[-20px] bottom-[-20px] text-slate-100 rotate-[-15deg] pointer-events-none" />
-                <div className="flex justify-between items-start mb-6">
-                  <div>
-                    <h4 className="text-2xl font-bold font-serif text-slate-800">Dutch Windmills</h4>
-                    <div className="flex items-center gap-2 text-sm font-bold text-[#8CBDB9] mt-2">
-                      <Calendar size={16} /> Sep 05 - Sep 12
-                    </div>
-                  </div>
-                  <div className="bg-slate-800 text-white text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md rotate-[-2deg] group-hover:rotate-[-6deg] transition-transform">
-                    Completed
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mb-6 flex-wrap">
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Kinderdijk</span>
-                  <span className="text-slate-300">→</span>
-                  <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Zaanse Schans</span>
-                </div>
-                <Link href="/trips/demo-trip-1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
-                  Open Scrapbook
-                </Link>
-              </div>
-            </div>
+            ))}
           </div>
         </section>
       </main>

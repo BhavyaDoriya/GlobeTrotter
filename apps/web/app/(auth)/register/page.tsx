@@ -9,6 +9,10 @@ import { useRouter } from "next/navigation";
 export default function RegisterPage() {
   const router = useRouter();
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Mock photo upload handler
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +49,30 @@ export default function RegisterPage() {
             <p className="text-slate-500 font-medium">Create your traveler profile to start planning.</p>
           </div>
 
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
+          <form className="space-y-6" onSubmit={async (e) => {
+            e.preventDefault();
+            try {
+              const res = await fetch("http://localhost:4000/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  firstName,
+                  lastName,
+                  email,
+                  password,
+                }),
+              });
+              if (res.ok) {
+                router.push('/login');
+              } else {
+                const data = await res.json();
+                alert(`Error: ${data.message || 'Registration failed'}`);
+              }
+            } catch (err) {
+              console.error(err);
+              alert("Registration failed");
+            }
+          }}>
             
             {/* Photo Upload (Matches Wireframe) */}
             <div className="flex justify-center mb-6">
@@ -73,20 +100,20 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">First Name</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="Jane" />
+                <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="Jane" />
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Last Name</label>
-                <input type="text" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="Doe" />
+                <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="Doe" />
               </div>
               
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Email Address</label>
-                <input type="email" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="traveler@world.com" />
+                <input type="email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="traveler@world.com" />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Phone Number</label>
-                <input type="tel" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="+1 (555) 000-0000" />
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Password</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} required minLength={8} className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="Minimum 8 characters" />
               </div>
 
               <div>
@@ -97,15 +124,6 @@ export default function RegisterPage() {
                 <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Country</label>
                 <input type="text" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none font-bold text-slate-700 transition-all" placeholder="e.g., India" />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-black uppercase tracking-widest text-slate-500 mb-2">Additional Information</label>
-              <textarea 
-                className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#F6D267] focus:bg-white focus:outline-none font-medium text-slate-700 transition-all resize-none" 
-                rows={3} 
-                placeholder="Tell us a bit about your travel style..."
-              ></textarea>
             </div>
 
             <button type="submit" className="w-full mt-4 flex items-center justify-center gap-2 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-black py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all group">

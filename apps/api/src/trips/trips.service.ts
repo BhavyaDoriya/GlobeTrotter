@@ -22,6 +22,10 @@ export class TripsService {
       include: {
         _count: { select: { stops: true } },
         budgetLines: { select: { amount: true } },
+        stops: {
+          orderBy: { orderIndex: 'asc' },
+          include: { city: true }
+        }
       },
       orderBy: { startDate: 'asc' },
     });
@@ -36,6 +40,7 @@ export class TripsService {
       isPublic: trip.isPublic,
       status: computeStatus(trip.startDate, trip.endDate),
       stopsCount: trip._count.stops,
+      stops: trip.stops,
       estimatedCost: trip.budgetLines.reduce((sum, l) => sum + l.amount, 0),
       createdAt: trip.createdAt.toISOString(),
     }));

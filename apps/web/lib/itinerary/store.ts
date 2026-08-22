@@ -62,6 +62,9 @@ interface ItineraryStore {
     endDate: string;
     totalBudget?: number;
   }) => string;
+
+  /** Inject a trip from the API into the store */
+  setTrip: (trip: any) => void;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -128,58 +131,13 @@ function reassignSequentialTimes(activities: StopActivity[]): void {
 export const useItineraryStore = create<ItineraryStore>()(
   persist(
     immer((set, get) => ({
-      trips: MOCK_TRIPS,
+      trips: {},
 
       // ── Selectors ────────────────────────────────────────────────────────────
 
       getTrip: (id: string) => {
         const state = get();
-        if (state.trips[id]) return state.trips[id];
-
-        // Fallback for dynamic trip IDs so "Trip Not Found" is never shown
-        if (id && id.startsWith('trip-')) {
-          const fallbackTrip: Trip = {
-            id,
-            userId: 'user-dev-b',
-            name: 'New Custom Adventure',
-            description: 'Custom Trip',
-            startDate: '2026-10-01',
-            endDate: '2026-10-07',
-            isPublic: false,
-            totalBudget: 1200,
-            stops: [
-              {
-                id: `stop-${id}`,
-                tripId: id,
-                city: {
-                  id: 'city-tokyo',
-                  name: 'Tokyo',
-                  country: 'Japan',
-                  lat: 35.6762,
-                  lng: 139.6503,
-                  costIndex: 150,
-                  popularityScore: 95,
-                },
-                orderIndex: 0,
-                arrivalDate: '2026-10-01',
-                departureDate: '2026-10-07',
-                scheduledActivities: [],
-              },
-            ],
-            budgetLines: [
-              { id: `bl-1-${id}`, tripId: id, category: 'transport', amount: 300 },
-              { id: `bl-2-${id}`, tripId: id, category: 'stay', amount: 400 },
-              { id: `bl-3-${id}`, tripId: id, category: 'activities', amount: 150 },
-              { id: `bl-4-${id}`, tripId: id, category: 'meals', amount: 150 },
-            ],
-          };
-
-          set((s) => {
-            s.trips[id] = fallbackTrip;
-          });
-          return fallbackTrip;
-        }
-        return undefined;
+        return state.trips[id];
       },
 
       getDaySchedules: (tripId: string) => {
@@ -195,9 +153,14 @@ export const useItineraryStore = create<ItineraryStore>()(
 
         return dates.map((date) => {
           const dayActs = allActivities.filter((sa) => sa.scheduledDate === date);
+          // Find the stop that covers this date
+          const activeStop = trip.stops.find(s => date >= s.arrivalDate && date <= s.departureDate) || trip.stops[0];
+          
           return {
             date,
             dayLabel: dayLabel(date),
+            stopId: activeStop?.id || '',
+            cityName: activeStop?.city.name || 'Unknown',
             activities: dayActs,
           };
         });
@@ -457,6 +420,20 @@ export const useItineraryStore = create<ItineraryStore>()(
 
         return id;
       },
+      setTrip: (trip) => {
+        set((state) => {
+          // Normalize the backend API data to match the expected Trip type format
+          state.trips[trip.id] = {
+            ...trip,
+            // Convert the stopActivities from NestJS to the format DayColumn expects
+            stops: trip.stops?.map((stop: any) => ({
+              ...stop,
+              scheduledActivities: stop.stopActivities || []
+            })) || []
+          };
+        });
+      },
+
     })),
     {
       name: 'globetrotter-itinerary-store',
