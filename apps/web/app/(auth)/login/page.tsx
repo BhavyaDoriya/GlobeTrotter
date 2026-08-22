@@ -1,186 +1,165 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plane, Globe2, Map, Camera, Luggage, Heart, Sun, Navigation } from "lucide-react";
+import { Globe2, Map, Camera, Luggage, Heart, Sun, Navigation } from "lucide-react";
 
 export default function IntroAndAuthPage() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [fadeOut, setFadeOut] = useState(false);
+  const [showIntro, setShowIntro] = useState(true);
+  const [isLeaving, setIsLeaving] = useState(false);
 
-  useEffect(() => {
-    // Start fade out after 3 seconds
-    const fadeTimer = setTimeout(() => setFadeOut(true), 3000);
-    // Remove splash screen completely after 3.5 seconds
-    const removeTimer = setTimeout(() => setShowSplash(false), 3500);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
-  }, []);
-
-  if (showSplash) {
-    return (
-      <div
-        className={`fixed inset-0 z-50 flex items-center justify-center bg-[#8CBDB9] transition-all duration-500 ease-in-out ${
-          fadeOut ? "opacity-0 scale-110" : "opacity-100 scale-100"
-        }`}
-      >
-        <style>{`
-          @keyframes orbit {
-            0% { transform: rotate(0deg) translateX(120px) rotate(0deg); }
-            100% { transform: rotate(360deg) translateX(120px) rotate(-90deg); }
-          }
-          .orbit-plane {
-            animation: orbit 3s linear infinite;
-          }
-          @keyframes dash {
-            to { stroke-dashoffset: -0; }
-          }
-        `}</style>
-
-        <div className="relative flex items-center justify-center w-64 h-64">
-          {/* Dashed flight path */}
-          <svg className="absolute w-full h-full animate-[spin_10s_linear_infinite]" viewBox="0 0 200 200">
-            <circle
-              cx="100"
-              cy="100"
-              r="80"
-              fill="none"
-              stroke="white"
-              strokeWidth="2"
-              strokeDasharray="8 8"
-              opacity="0.6"
-            />
-          </svg>
-
-          {/* Sticker Globe */}
-          <div className="absolute z-10 p-2 bg-[#8CBDB9] border-[6px] border-white rounded-full shadow-lg">
-            <Globe2 size={80} className="text-white" fill="#4A7C77" />
-          </div>
-
-          {/* Orbiting Plane Sticker */}
-          <div className="absolute z-20 orbit-plane">
-            <div className="p-2 bg-[#E77A64] border-4 border-white rounded-full shadow-md rotate-45">
-              <Plane size={24} className="text-white" fill="white" />
-            </div>
-          </div>
-          
-          <h1 className="absolute -bottom-16 text-3xl font-bold text-white tracking-widest drop-shadow-md">
-            GLOBE TROTTER
-          </h1>
-        </div>
-      </div>
-    );
-  }
+  const enterSite = () => {
+    if (isLeaving) return;
+    setIsLeaving(true);
+    // Wait for the exit animation to finish before removing from DOM
+    setTimeout(() => setShowIntro(false), 1050);
+  };
 
   return (
-    <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans overflow-x-hidden selection:bg-[#F6D267] selection:text-slate-900">
-      {/* Background Dashed Lines */}
-      <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
-        <path d="M-100,200 Q400,50 800,300 T1600,100" fill="none" stroke="#4A7C77" strokeWidth="3" strokeDasharray="10 10" />
-        <path d="M-100,600 Q300,800 900,500 T1800,700" fill="none" stroke="#4A7C77" strokeWidth="3" strokeDasharray="10 10" />
-      </svg>
+    <>
+      {/* ============ CLAUDE INTRO SCENE (RECOLORED) ============ */}
+      {showIntro && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-1000 ease-[cubic-bezier(.6,0,.2,1)] overflow-hidden ${
+            isLeaving ? "scale-110 opacity-0 pointer-events-none" : "scale-100 opacity-100"
+          }`}
+          style={{
+            background: "radial-gradient(120% 100% at 50% 0%, #C3DFDD 0%, #8CBDB9 55%, #4A7C77 100%)",
+          }}
+        >
+          <style>{`
+            .orbit-ring { position:absolute; inset:6%; border-radius:50%; border:2px dashed rgba(255,255,255,0.4); }
+            .globe-anim { position:relative; width:64%; height:64%; border-radius:50%; background: radial-gradient(circle at 32% 28%, #E5F0EF, #4A7C77 70%); box-shadow: inset -18px -18px 40px rgba(0,0,0,0.15), 0 22px 40px rgba(0,0,0,0.1); animation: spin 24s linear infinite; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+            .flight-path { position:absolute; inset:0; fill:none; stroke: white; stroke-width:2.5; stroke-dasharray:1 10; stroke-linecap:round; opacity:0.55; }
+            .plane-svg { position:absolute; width:46px; height:46px; left:0; top:0; offset-path: path('M 280,40 C 480,90 500,300 280,340 C 60,380 40,150 280,40'); offset-rotate: auto; animation: fly 5.5s linear infinite; filter: drop-shadow(1.4px 0 0 white) drop-shadow(-1.4px 0 0 white) drop-shadow(0 1.4px 0 white) drop-shadow(0 -1.4px 0 white) drop-shadow(0 6px 10px rgba(0,0,0,0.2)); }
+            @keyframes fly { from { offset-distance:0%; } to { offset-distance:100%; } }
+            .wordmark { position:absolute; bottom:6%; left:0; right:0; text-align:center; opacity:0; animation: reveal 1s ease forwards 2.6s; color: white; }
+            @keyframes reveal { to { opacity:1; transform:translateY(0); } from { transform:translateY(10px); } }
+            .enter-btn { position:absolute; bottom:-3%; left:50%; transform: translate(-50%, 140%); display:inline-flex; align-items:center; gap:10px; background: #E77A64; color: white; border: 3px solid white; padding:14px 26px; border-radius:999px; font-weight:700; font-size:14px; cursor:pointer; opacity:0; box-shadow: 0 12px 24px rgba(0,0,0,0.2); transition: transform 0.25s ease, box-shadow 0.25s ease; }
+            .enter-btn:hover { transform: translate(-50%, 140%) scale(1.04); box-shadow: 0 16px 30px rgba(0,0,0,0.3); }
+            @keyframes reveal-btn { to { opacity:1; transform: translate(-50%, 210%); } }
+            @keyframes pulse-btn { 0%,100%{transform: translate(-50%, 210%) scale(1);} 50%{transform: translate(-50%, 210%) scale(1.04);} }
+            .pulse-active { animation: reveal-btn 1s ease forwards, pulse-btn 1.8s ease-in-out infinite 4.4s !important; }
+            .sticker-float { position:absolute; filter: drop-shadow(1.4px 0 0 white) drop-shadow(-1.4px 0 0 white) drop-shadow(0 1.4px 0 white) drop-shadow(0 -1.4px 0 white) drop-shadow(0 6px 10px rgba(0,0,0,0.25)); animation: bob 4.5s ease-in-out infinite; }
+            @keyframes bob { 0%,100%{ transform: translateY(0) rotate(var(--r,0deg)); } 50%{ transform: translateY(-10px) rotate(var(--r,0deg)); } }
+          `}</style>
 
-      <div className="flex min-h-screen relative z-10 container mx-auto px-4 lg:px-8">
-        
-        {/* LEFT COLUMN: Authentication Form (Person A Core Flow) */}
-        <div className="w-full lg:w-1/2 flex items-center justify-center py-12">
-          {/* Main Scrapbook Card */}
-          <div className="relative w-full max-w-md bg-white p-8 md:p-10 rounded-3xl border-8 border-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] rotate-[-1deg] hover:rotate-0 transition-transform duration-300">
+          <button className="absolute top-6 right-6 bg-white/20 hover:bg-white/30 text-white px-5 py-2.5 rounded-full font-bold text-sm tracking-wide transition-all z-50" onClick={enterSite}>
+            Skip intro
+          </button>
+
+          <div className="relative w-[min(90vw,560px)] aspect-square flex items-center justify-center">
+            <div className="orbit-ring"></div>
             
-            {/* Decorative Corner Sticker */}
-            <div className="absolute -top-6 -left-6 bg-[#F6D267] p-3 rounded-full border-4 border-white shadow-md rotate-12">
-              <Sun size={32} className="text-amber-600" />
+            {/* Background Stickers mapped to your pastel palette */}
+            <svg className="sticker-float w-14 top-[2%] left-[-4%]" style={{ '--r': '-12deg', animationDelay: '0.2s' } as any} viewBox="0 0 64 64"><path d="M32 6c14 0 24 12 24 26S46 58 32 58 8 46 8 32 18 6 32 6z" fill="#F6D267"/><path d="M14 26c6-4 12 2 18-2s10-8 16-4" stroke="#E77A64" strokeWidth="3" fill="none" strokeLinecap="round"/></svg>
+            <svg className="sticker-float w-12 bottom-[6%] left-[-2%]" style={{ '--r': '8deg', animationDelay: '1.1s' } as any} viewBox="0 0 64 64"><rect x="10" y="16" width="30" height="38" rx="4" fill="#8CBDB9"/><rect x="16" y="8" width="18" height="12" rx="3" fill="#4A7C77"/><rect x="44" y="24" width="10" height="6" rx="2" fill="#E77A64"/></svg>
+
+            <div className="globe-anim">
+              <svg viewBox="0 0 200 200" className="w-full h-full block">
+                <path d="M40 60c30-20 60 10 90-4s40-14 40-14v130s-20 10-50 0-60-24-90-4-20-10-20-10V70s10-6 30-10z" fill="#4A7C77" opacity="0.55"/>
+                <path d="M10 120c20-16 40 8 70 0s45-20 70-6v70H10z" fill="#2D4C49" opacity="0.5"/>
+              </svg>
             </div>
 
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-extrabold text-[#4A7C77] mb-2 font-serif tracking-tight">Time to Travel</h2>
-              <p className="text-slate-500 font-medium">Log in to build your itinerary.</p>
+            <svg className="flight-path" viewBox="0 0 560 560" preserveAspectRatio="none">
+              <path d="M 280,40 C 480,90 500,300 280,340 C 60,380 40,150 280,40" />
+            </svg>
+
+            <svg className="plane-svg" viewBox="0 0 48 48">
+              <path d="M44 24 30 18 20 4 15 6 20 20 6 22 2 18 0 20 6 26 0 30 2 32 6 28 20 30 15 44 20 46 30 32 44 26Z" fill="#E77A64"/>
+            </svg>
+
+            <div className="wordmark">
+              <h1 className="font-serif font-bold text-4xl md:text-5xl tracking-tight">GlobeTrotter</h1>
+              <p className="mt-1 text-xs font-bold tracking-[0.2em] uppercase text-white/80">Time to Travel</p>
             </div>
 
-            <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="email">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all"
-                  placeholder="traveler@world.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="password">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  id="password"
-                  className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all"
-                  placeholder="••••••••"
-                />
-              </div>
-              
-              <div className="flex items-center justify-between mt-2">
-                <label className="flex items-center space-x-2 cursor-pointer">
-                  <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-[#E77A64] focus:ring-[#E77A64]" />
-                  <span className="text-sm font-medium text-slate-600">Remember me</span>
-                </label>
-                <a href="#" className="text-sm font-bold text-[#E77A64] hover:underline hover:text-[#d66752]">
-                  Forgot password?
-                </a>
-              </div>
-
-              <button className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all">
-                Let's Go! ✈️
-              </button>
-            </form>
-
-            <div className="mt-8 text-center text-slate-500 font-medium">
-              Don't have an account? <a href="#" className="text-[#4A7C77] font-bold hover:underline">Sign up</a>
-            </div>
+            <button className="enter-btn pulse-active z-50" onClick={enterSite}>
+              Begin the journey
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-4 h-4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
           </div>
         </div>
+      )}
 
-        {/* RIGHT COLUMN: Desktop Scrapbook Collage (Hidden on Mobile) */}
-        <div className="hidden lg:flex w-1/2 relative items-center justify-center perspective-1000">
-          <div className="relative w-[500px] h-[500px]">
-            {/* Center Yellow Circle Background */}
-            <div className="absolute inset-0 m-auto w-96 h-96 bg-[#F6D267] rounded-full shadow-inner opacity-90"></div>
+      {/* ============ MAIN AUTH SITE ============ */}
+      <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans overflow-x-hidden selection:bg-[#F6D267] selection:text-slate-900">
+        <svg className="fixed inset-0 w-full h-full pointer-events-none opacity-20" xmlns="http://www.w3.org/2000/svg">
+          <path d="M-100,200 Q400,50 800,300 T1600,100" fill="none" stroke="#4A7C77" strokeWidth="3" strokeDasharray="10 10" />
+          <path d="M-100,600 Q300,800 900,500 T1800,700" fill="none" stroke="#4A7C77" strokeWidth="3" strokeDasharray="10 10" />
+        </svg>
 
-            {/* Sticker 1: Camera */}
-            <div className="absolute top-10 left-10 bg-[#8CBDB9] p-4 rounded-2xl border-[6px] border-white shadow-xl rotate-[-15deg] hover:rotate-[-5deg] hover:scale-110 transition-all duration-300 cursor-pointer">
-              <Camera size={64} className="text-white" fill="white" />
+        <div className="flex min-h-screen relative z-10 container mx-auto px-4 lg:px-8">
+          
+          <div className="w-full lg:w-1/2 flex items-center justify-center py-12">
+            <div className="relative w-full max-w-md bg-white p-8 md:p-10 rounded-3xl border-8 border-white shadow-[0_20px_50px_rgba(0,0,0,0.1)] rotate-[-1deg] hover:rotate-0 transition-transform duration-300">
+              
+              <div className="absolute -top-6 -left-6 bg-[#F6D267] p-3 rounded-full border-4 border-white shadow-md rotate-12">
+                <Sun size={32} className="text-amber-600" />
+              </div>
+
+              <div className="text-center mb-8">
+                <h2 className="text-4xl font-extrabold text-[#4A7C77] mb-2 font-serif tracking-tight">Time to Travel</h2>
+                <p className="text-slate-500 font-medium">Log in to build your itinerary.</p>
+              </div>
+
+              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="email">Email Address</label>
+                  <input type="email" id="email" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="traveler@world.com" />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="password">Password</label>
+                  <input type="password" id="password" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="••••••••" />
+                </div>
+                
+                <div className="flex items-center justify-between mt-2">
+                  <label className="flex items-center space-x-2 cursor-pointer">
+                    <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-[#E77A64] focus:ring-[#E77A64]" />
+                    <span className="text-sm font-medium text-slate-600">Remember me</span>
+                  </label>
+                  <a href="#" className="text-sm font-bold text-[#E77A64] hover:underline hover:text-[#d66752]">Forgot password?</a>
+                </div>
+
+                <button className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all">
+                  Let's Go! ✈️
+                </button>
+              </form>
+
+              <div className="mt-8 text-center text-slate-500 font-medium">
+                Don't have an account? <a href="#" className="text-[#4A7C77] font-bold hover:underline">Sign up</a>
+              </div>
             </div>
+          </div>
 
-            {/* Sticker 2: Map */}
-            <div className="absolute bottom-20 left-4 bg-[#E77A64] p-3 rounded-xl border-[6px] border-white shadow-xl rotate-[10deg] hover:rotate-[0deg] hover:scale-110 transition-all duration-300 cursor-pointer">
-              <Map size={48} className="text-white" />
-            </div>
+          <div className="hidden lg:flex w-1/2 relative items-center justify-center perspective-1000">
+            <div className="relative w-[500px] h-[500px]">
+              <div className="absolute inset-0 m-auto w-96 h-96 bg-[#F6D267] rounded-full shadow-inner opacity-90"></div>
 
-            {/* Sticker 3: Suitcase */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#4A7C77] p-6 rounded-3xl border-[8px] border-white shadow-2xl rotate-3 z-20">
-              <Luggage size={100} className="text-white" fill="white" />
-            </div>
-
-
-            {/* Sticker 5: Location Pin */}
-            <div className="absolute bottom-32 right-10 bg-red-500 p-3 rounded-full border-[5px] border-white shadow-xl rotate-[-12deg] hover:scale-110 transition-all z-30">
-              <Navigation size={32} className="text-white" fill="white" />
-            </div>
-            
-            {/* Tiny Deco Stickers */}
-            <div className="absolute top-0 right-1/3 bg-white p-2 rounded-full shadow-sm rotate-45">
-              <Heart size={20} className="text-pink-400" fill="#f472b6" />
-            </div>
-            <div className="absolute bottom-10 left-1/3 bg-white p-2 rounded-full shadow-sm -rotate-12">
-               <span className="text-2xl">🌴</span>
+              <div className="absolute top-10 left-10 bg-[#8CBDB9] p-4 rounded-2xl border-[6px] border-white shadow-xl rotate-[-15deg] hover:rotate-[-5deg] hover:scale-110 transition-all duration-300 cursor-pointer">
+                <Camera size={64} className="text-white" fill="white" />
+              </div>
+              <div className="absolute bottom-20 left-4 bg-[#E77A64] p-3 rounded-xl border-[6px] border-white shadow-xl rotate-[10deg] hover:rotate-[0deg] hover:scale-110 transition-all duration-300 cursor-pointer">
+                <Map size={48} className="text-white" />
+              </div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#4A7C77] p-6 rounded-3xl border-[8px] border-white shadow-2xl rotate-3 z-20">
+                <Luggage size={100} className="text-white" fill="white" />
+              </div>
+              <div className="absolute bottom-32 right-10 bg-red-500 p-3 rounded-full border-[5px] border-white shadow-xl rotate-[-12deg] hover:scale-110 transition-all z-30">
+                <Navigation size={32} className="text-white" fill="white" />
+              </div>
+              
+              <div className="absolute top-0 right-1/3 bg-white p-2 rounded-full shadow-sm rotate-45">
+                <Heart size={20} className="text-pink-400" fill="#f472b6" />
+              </div>
+              <div className="absolute bottom-10 left-1/3 bg-white p-2 rounded-full shadow-sm -rotate-12">
+                 <span className="text-2xl">🌴</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
