@@ -133,7 +133,13 @@ export default function MyTripsPage() {
     rotation: idx % 2 === 0 ? "rotate-[1deg]" : "rotate-[-2deg]",
   }));
 
-  const combinedTrips = [...dbTripsFormatted, ...storeTripsArray];
+  // Deduplicate trips by ID so React keys are guaranteed unique
+  const uniqueTripsMap = new Map<string, any>();
+  [...storeTripsArray, ...dbTripsFormatted].forEach((t) => {
+    uniqueTripsMap.set(t.id, t);
+  });
+  const combinedTrips = Array.from(uniqueTripsMap.values());
+
   const filteredTrips = searchQuery
     ? combinedTrips.filter((t) => t.title.toLowerCase().includes(searchQuery.toLowerCase()) || t.route.toLowerCase().includes(searchQuery.toLowerCase()))
     : combinedTrips;
@@ -188,8 +194,8 @@ export default function MyTripsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {ongoing.map((trip) => (
-                <TripCard key={trip.id} {...trip} />
+              {ongoing.map((trip, idx) => (
+                <TripCard key={`ongoing-${trip.id}-${idx}`} {...trip} />
               ))}
             </div>
           </section>
@@ -202,8 +208,8 @@ export default function MyTripsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {upcoming.map((trip) => (
-              <TripCard key={trip.id} {...trip} />
+            {upcoming.map((trip, idx) => (
+              <TripCard key={`upcoming-${trip.id}-${idx}`} {...trip} />
             ))}
           </div>
         </section>
@@ -216,8 +222,8 @@ export default function MyTripsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 opacity-90">
-              {completed.map((trip) => (
-                <TripCard key={trip.id} {...trip} />
+              {completed.map((trip, idx) => (
+                <TripCard key={`completed-${trip.id}-${idx}`} {...trip} />
               ))}
             </div>
           </section>

@@ -111,4 +111,13 @@ export const apiClient = {
         body: JSON.stringify({ amount }),
       }),
   },
+
+  users: {
+    getMe: () => request<any>('/users/me'),
+    updateMe: (data: any) =>
+      request<any>('/users/me', {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
+  },
 };
