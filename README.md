@@ -155,7 +155,7 @@ GlobeTrotter was engineered with passion by a dedicated team of builders:
 | **Bhavya Doriya** | Lead Frontend Architect | Designed the scrapbook visual design system, travel log dashboard, and creative trip notebook forms. | [@BhavyaDoriya](https://github.com/BhavyaDoriya) |
 | **Shubhra-jyoti** | Frontend Systems & AI Engineer | Engineered the live drag-and-drop itinerary builder, time-collision validation, and ElevenLabs AI voice warnings. | [@Shubhra-jyoti](https://github.com/Shubhra-jyoti) |
 | **Manthan Shah** | Backend Core Lead | Architected the NestJS microservices backend, PostgreSQL database schema, and trip CRUD API endpoints. | [@Manthanshah1406](https://github.com/Manthanshah1406) |
-| **Krish Patel** | Systems & AI Infra Lead | Built the `pgvector` semantic city search engine, Redis BullMQ queues, live Socket.io feed, and deployment pipelines. | [@KrishPatel](https://github.com/KrishPatel) |
+| **Krish Patel** | Systems & AI Infra Lead | Built the `pgvector` semantic city search engine, Redis BullMQ queues, live Socket.io feed, and deployment pipelines. | [@KrishPatel](https://github.com/Krishp2007) |
 
 ---
 
