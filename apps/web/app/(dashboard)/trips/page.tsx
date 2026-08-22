@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { Search, SlidersHorizontal, MapPin, Calendar, ArrowRight, Compass, Plane, CheckCircle2, Ticket } from "lucide-react";
 
 // ==========================================
@@ -8,6 +9,7 @@ import { Search, SlidersHorizontal, MapPin, Calendar, ArrowRight, Compass, Plane
 // Person B can import this to use on the Profile or Calendar views!
 // ==========================================
 export const TripCard = ({ 
+  id = '1',
   title, 
   route, 
   dates, 
@@ -15,6 +17,7 @@ export const TripCard = ({
   status, 
   rotation 
 }: { 
+  id?: string,
   title: string, 
   route: string, 
   dates: string, 
@@ -48,7 +51,7 @@ export const TripCard = ({
   const style = statusStyles[status];
 
   return (
-    <div className={`group relative bg-white p-4 pb-6 rounded-2xl shadow-xl border-[6px] border-white cursor-pointer hover:z-50 transition-all duration-500 hover:rotate-0 hover:scale-105 hover:-translate-y-2 ${rotation} ${status === 'ongoing' ? 'ring-4 ring-[#E77A64]/30' : ''}`}>
+    <Link href={`/trips/${id}/view`} className={`block group relative bg-white p-4 pb-6 rounded-2xl shadow-xl border-[6px] border-white cursor-pointer hover:z-50 transition-all duration-500 hover:rotate-0 hover:scale-105 hover:-translate-y-2 ${rotation} ${status === 'ongoing' ? 'ring-4 ring-[#E77A64]/30' : ''}`}>
       
       {/* Messy Tape */}
       <div className={`absolute -top-3 left-1/2 -translate-x-1/2 w-20 h-6 bg-white/80 backdrop-blur-md shadow-sm rotate-[-3deg] z-10 transition-transform group-hover:rotate-[2deg] ${style.border} border-t-2`}></div>
@@ -88,7 +91,7 @@ export const TripCard = ({
       <div className="absolute bottom-4 right-4 bg-slate-100 p-2 rounded-full opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all text-[#4A7C77] hover:bg-[#F6D267] hover:text-slate-900">
         <ArrowRight size={20} />
       </div>
-    </div>
+    </Link>
   );
 };
 

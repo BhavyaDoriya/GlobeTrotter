@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Globe2, Map, Camera, Luggage, Heart, Sun, Navigation } from "lucide-react";
 
 export default function IntroAndAuthPage() {
+  const router = useRouter();
   const [showIntro, setShowIntro] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
 
@@ -104,7 +107,7 @@ export default function IntroAndAuthPage() {
                 <p className="text-slate-500 font-medium">Log in to build your itinerary.</p>
               </div>
 
-              <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="email">Email Address</label>
                   <input type="email" id="email" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="traveler@world.com" />
@@ -122,13 +125,13 @@ export default function IntroAndAuthPage() {
                   <a href="#" className="text-sm font-bold text-[#E77A64] hover:underline hover:text-[#d66752]">Forgot password?</a>
                 </div>
 
-                <button className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all">
+                <button type="submit" className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all">
                   Let's Go! ✈️
                 </button>
               </form>
 
               <div className="mt-8 text-center text-slate-500 font-medium">
-                Don't have an account? <a href="#" className="text-[#4A7C77] font-bold hover:underline">Sign up</a>
+                Don't have an account? <Link href="/register" className="text-[#4A7C77] font-bold hover:underline">Sign up</Link>
               </div>
             </div>
           </div>

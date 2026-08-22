@@ -3,10 +3,12 @@
 import React, { useState } from "react";
 import { MapPin, Mail, Phone, Edit3, Camera, Map, CheckCircle2, Ticket, Compass } from "lucide-react";
 
+import Link from "next/link";
+
 // (Stubbing the TripCard here so the file runs stand-alone, 
 // but in reality you'd import this from your components folder!)
-const ProfileTripCard = ({ title, route, image, status, rotation }: any) => (
-  <div className={`group relative bg-white p-3 rounded-2xl shadow-lg border-[4px] border-white cursor-pointer hover:z-50 transition-all duration-300 hover:rotate-0 hover:scale-105 hover:-translate-y-2 ${rotation}`}>
+const ProfileTripCard = ({ id = '1', title, route, image, status, rotation }: any) => (
+  <Link href={`/trips/${id}/view`} className={`block group relative bg-white p-3 rounded-2xl shadow-lg border-[4px] border-white cursor-pointer hover:z-50 transition-all duration-300 hover:rotate-0 hover:scale-105 hover:-translate-y-2 ${rotation}`}>
     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-white/80 backdrop-blur-md shadow-sm rotate-[3deg] z-10 transition-transform group-hover:rotate-[-2deg]"></div>
     <div className="relative w-full h-40 rounded-xl overflow-hidden mb-3 bg-slate-100">
       <img src={image} alt={title} className={`w-full h-full object-cover transition-transform duration-700 ${status === 'completed' ? 'grayscale-[30%]' : 'group-hover:scale-110'}`} />
@@ -17,7 +19,7 @@ const ProfileTripCard = ({ title, route, image, status, rotation }: any) => (
         <MapPin size={12} className={status === 'completed' ? 'text-slate-400' : 'text-[#E77A64]'} /> {route}
       </p>
     </div>
-  </div>
+  </Link>
 );
 
 export default function ProfilePage() {
@@ -154,12 +156,12 @@ export default function ProfilePage() {
                 />
                 
                 {/* "Plan another" placeholder polaroid */}
-                <div className="group relative bg-slate-100/50 p-3 rounded-2xl border-4 border-dashed border-slate-300 cursor-pointer hover:border-[#8CBDB9] hover:bg-white transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] rotate-1">
+                <Link href="/trips/new" className="block group relative bg-slate-100/50 p-3 rounded-2xl border-4 border-dashed border-slate-300 cursor-pointer hover:border-[#8CBDB9] hover:bg-white transition-all duration-300 flex flex-col items-center justify-center min-h-[220px] rotate-1">
                   <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform mb-3">
                     <Compass size={24} className="text-[#8CBDB9]" />
                   </div>
                   <p className="font-bold text-slate-500 group-hover:text-[#8CBDB9] transition-colors">Plan New Trip</p>
-                </div>
+                </Link>
               </div>
             </div>
 

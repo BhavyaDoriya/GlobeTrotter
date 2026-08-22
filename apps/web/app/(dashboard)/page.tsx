@@ -1,9 +1,13 @@
 "use client";
 
-import React from "react";
-import { Search, SlidersHorizontal, MapPin, Calendar, Plus, Plane, Compass, Camera, Heart } from "lucide-react";
+import React, { useState } from "react";
+import Link from "next/link";
+import { Search, SlidersHorizontal, MapPin, Calendar, Plus, Plane, Compass, Camera, Heart, ChevronDown } from "lucide-react";
 
 export default function DashboardPage() {
+  // State to handle the interactive filter dropdown
+  const [showFilters, setShowFilters] = useState(false);
+
   return (
     <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans pb-32 overflow-hidden selection:bg-[#F6D267] selection:text-slate-900">
       
@@ -23,41 +27,13 @@ export default function DashboardPage() {
         <Camera size={48} className="text-[#E77A64] rotate-12" />
       </div>
 
-      {/* NAVBAR: Floating Pill Design */}
-      <nav className="relative z-50 pt-6 px-4">
-        <div className="container mx-auto">
-          <div className="bg-white/80 backdrop-blur-xl border-4 border-white shadow-[0_10px_30px_rgba(0,0,0,0.05)] rounded-full px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-4 transition-all hover:shadow-[0_15px_40px_rgba(0,0,0,0.08)]">
-            
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="bg-[#E77A64] p-2 rounded-full shadow-inner group-hover:rotate-180 transition-transform duration-700">
-                <Plane size={20} className="text-white" fill="white" />
-              </div>
-              <h1 className="text-2xl font-serif font-black text-[#4A7C77] tracking-tighter group-hover:text-[#E77A64] transition-colors">GlobeTrotter</h1>
-            </div>
-            
-            <div className="flex w-full md:w-auto items-center gap-3">
-              <div className="relative group flex-1 md:w-96">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-[#4A7C77] group-focus-within:text-[#E77A64] transition-colors" size={20} />
-                <input 
-                  type="text" 
-                  placeholder="Where is your next adventure?" 
-                  className="w-full pl-12 pr-4 py-3 rounded-full bg-slate-100/50 border-2 border-transparent focus:bg-white focus:border-[#F6D267] focus:outline-none focus:ring-4 focus:ring-[#F6D267]/20 transition-all font-bold text-slate-700 placeholder-slate-400"
-                />
-              </div>
-              <button className="bg-slate-100 p-3 rounded-full hover:bg-[#F6D267] text-[#4A7C77] hover:text-slate-900 transition-all hover:rotate-12">
-                <SlidersHorizontal size={20} />
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      
 
       <main className="relative z-10 container mx-auto px-4 lg:px-8 mt-12">
         
         {/* ASYMMETRICAL HERO SECTION */}
         <section className="relative flex flex-col lg:flex-row items-center gap-12 mb-24">
           
-          {/* Left Text Block */}
           <div className="lg:w-1/3 space-y-6 relative z-20">
             <div className="inline-block bg-[#F6D267] px-4 py-2 rounded-lg font-black text-sm uppercase tracking-widest text-slate-800 rotate-[-3deg] border-2 border-white shadow-sm">
               Featured Spot
@@ -71,9 +47,7 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          {/* Right Giant Polaroid */}
           <div className="lg:w-2/3 relative group perspective-1000">
-            {/* The Tape */}
             <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-32 h-10 bg-white/70 backdrop-blur-md border border-white/50 shadow-md rotate-[-2deg] z-30 transition-transform group-hover:rotate-0"></div>
             
             <div className="bg-white p-4 md:p-6 pb-12 md:pb-16 rounded-xl border-4 border-slate-100 shadow-[0_30px_60px_rgba(0,0,0,0.15)] rotate-[2deg] group-hover:rotate-0 group-hover:scale-[1.02] transition-all duration-500 ease-out">
@@ -109,9 +83,7 @@ export default function DashboardPage() {
               { city: "Bali", country: "Indonesia", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&q=80", style: "rotate-[5deg] translate-y-1" },
             ].map((place, i) => (
               <div key={i} className={`group relative w-64 bg-white p-3 rounded-2xl shadow-xl border-[6px] border-white cursor-pointer hover:z-50 transition-all duration-300 hover:rotate-0 hover:scale-110 hover:-translate-y-4 ${place.style}`}>
-                {/* Mini Tape */}
                 <div className="absolute -top-3 right-4 w-12 h-5 bg-white/80 backdrop-blur-sm shadow-sm rotate-[15deg]"></div>
-                
                 <div className="w-full h-48 rounded-xl overflow-hidden mb-4">
                   <img src={place.img} alt={place.city} className="w-full h-full object-cover" />
                 </div>
@@ -131,16 +103,11 @@ export default function DashboardPage() {
           <h3 className="text-3xl font-extrabold text-[#4A7C77] font-serif mb-10">Your Travel Log</h3>
           
           <div className="flex flex-col lg:flex-row gap-8">
-            
             {/* Ticket 1 */}
             <div className="group relative flex w-full max-w-2xl bg-[#FFFDF8] rounded-3xl overflow-hidden shadow-[0_15px_35px_rgba(0,0,0,0.05)] border-4 border-white hover:-translate-y-2 transition-all duration-300">
-              {/* Left Color Bar */}
               <div className="w-6 bg-[#E77A64]"></div>
-              {/* Content */}
               <div className="flex-1 p-6 relative">
-                {/* Background Watermark */}
                 <Plane size={120} className="absolute right-[-20px] bottom-[-20px] text-slate-100 rotate-[-15deg] pointer-events-none" />
-                
                 <div className="flex justify-between items-start mb-6">
                   <div>
                     <h4 className="text-2xl font-bold font-serif text-slate-800">Nordic Adventure</h4>
@@ -161,9 +128,9 @@ export default function DashboardPage() {
                   <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Rovaniemi</span>
                 </div>
                 
-                <button className="w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
+                <Link href="/trips/1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
                   Open Scrapbook
-                </button>
+                </Link>
               </div>
             </div>
 
@@ -188,20 +155,14 @@ export default function DashboardPage() {
                   <span className="text-slate-300">→</span>
                   <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Zaanse Schans</span>
                 </div>
-                <button className="w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
+                <Link href="/trips/2/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
                   Open Scrapbook
-                </button>
+                </Link>
               </div>
             </div>
-
           </div>
         </section>
       </main>
-
-      {/* FLOATING ACTION BUTTON */}
-      <button className="fixed bottom-10 right-10 z-50 flex items-center gap-3 bg-[#E77A64] hover:bg-[#d66752] text-white text-xl font-black py-4 px-8 rounded-full border-4 border-white shadow-[0_10px_20px_rgba(231,122,100,0.4)] hover:shadow-[0_15px_30px_rgba(231,122,100,0.6)] hover:-translate-y-2 transition-all duration-300 group">
-        <Plus size={28} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300" /> Plan a Trip
-      </button>
 
     </div>
   );

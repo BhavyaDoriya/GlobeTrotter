@@ -23,11 +23,21 @@ const SuggestionPolaroid = ({ delay, rotation }: { delay: string, rotation: stri
   </div>
 );
 
+import { useRouter } from "next/navigation";
+
 export default function CreateTripPage() {
+  const router = useRouter();
   const [tripName, setTripName] = useState("");
   const [place, setPlace] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tripName && place) {
+      router.push("/trips/1/build");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans pb-32 overflow-hidden selection:bg-[#F6D267] selection:text-slate-900 pt-12">
@@ -60,7 +70,7 @@ export default function CreateTripPage() {
 
               <h2 className="text-4xl font-extrabold text-[#4A7C77] mb-8 font-serif tracking-tight mt-4">Draft your <br/><span className="text-[#E77A64] italic underline decoration-[#F6D267] decoration-4 underline-offset-4">Adventure.</span></h2>
 
-              <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+              <form className="space-y-6" onSubmit={handleSubmit}>
                 
                 {/* Trip Name Input */}
                 <div className="group">
