@@ -15,14 +15,13 @@ function SearchContent() {
 
   useEffect(() => {
     setLoading(true);
-    apiClient.cities
-      .list(query)
+    fetchApi('/cities')
       .then((data) => {
         if (Array.isArray(data)) setCities(data);
       })
       .catch((err) => console.log("Cities API error:", err.message))
       .finally(() => setLoading(false));
-  }, [query]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#E5F0EF] text-slate-800 font-sans pb-32 pt-8">
