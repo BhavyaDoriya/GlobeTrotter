@@ -1,87 +1,16 @@
 version: '3.8'
 
-services:
-  # -------------------------------------------------------------
-  # 1. PostgreSQL Database with pgvector Extension
-  # -------------------------------------------------------------
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: globetrotter-postgres
-    restart: always
-    environment:
-      POSTGRES_USER: globetrotter
-      POSTGRES_PASSWORD: globetrotter_password
-      POSTGRES_DB: globetrotter_db
-    ports:
-      - '5432:5432'
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U globetrotter -d globetrotter_db"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
+# Postgres is hosted on Supabase — no local Postgres container needed.
+# This file only runs Redis for Person D's queues and rate limiting.
 
-  # -------------------------------------------------------------
-  # 2. Redis Cache & Queue Broker
-  # -------------------------------------------------------------
+services:
   redis:
     image: redis:7-alpine
-    container_name: globetrotter-redis
-    restart: always
+    container_name: globetrotter_redis
     ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
+      - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
+      interval: 10s
       timeout: 5s
       retries: 5
-
-  # -------------------------------------------------------------
-  # 3. NestJS Backend API Service (Person C & D)
-  # -------------------------------------------------------------
-  api:
-    build:
-      context: .
-      dockerfile: ./apps/api/Dockerfile
-    container_name: globetrotter-api
-    restart: always
-    ports:
-      - '3001:3001'
-    environment:
-      NODE_ENV: development
-      PORT: 3001
-      DATABASE_URL: postgresql://globetrotter:globetrotter_password@postgres:5432/globetrotter_db?schema=public
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      JWT_SECRET: supersecret_jwt_key_globetrotter_2026
-      JWT_EXPIRES_IN: 7d
-      FRONTEND_URL: http://localhost:3000
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-
-  # -------------------------------------------------------------
-  # 4. Next.js Frontend Service (Person A & B)
-  # -------------------------------------------------------------
-  web:
-    build:
-      context: .
-      dockerfile: ./apps/web/Dockerfile
-    container_name: globetrotter-web
-    restart: always
-    ports:
-      - '3000:3000'
-    environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_API_URL: http://localhost:3001
-    depends_on:
-      - api
-
-volumes:
-  postgres_data:
-  redis_data:

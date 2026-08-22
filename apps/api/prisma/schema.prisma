@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum BudgetCategory {
+  TRANSPORT
+  STAY
+  ACTIVITIES
+  MEALS
+  OTHER
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  passwordHash  String
+  firstName     String
+  lastName      String
+  city          String?
+  country       String?
+  avatarUrl     String?
+  role          Role           @default(USER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  trips         Trip[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model Trip {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  startDate     DateTime
+  endDate       DateTime
+  coverPhotoUrl String?
+  isPublic      Boolean      @default(false)
+  shareSlug     String?      @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  stops         Stop[]
+  budgetLines   BudgetLine[]
+}
+
+model Stop {
+  id             String         @id @default(cuid())
+  tripId         String
+  trip           Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  cityId         String
+  city           City           @relation(fields: [cityId], references: [id])
+  orderIndex     Int
+  arrivalDate    DateTime
+  departureDate  DateTime
+  createdAt      DateTime       @default(now())
+
+  stopActivities StopActivity[]
+  budgetLines    BudgetLine[]
+
+  @@index([tripId, orderIndex])
+}
+
+model City {
+  id              String     @id @default(cuid())
+  name            String
+  country         String
+  region          String
+  lat             Float
+  lng             Float
+  costIndex       Float      @default(1.0)
+  popularityScore Float      @default(0.0)
+  imageUrl        String?
+  createdAt       DateTime   @default(now())
+
+  stops           Stop[]
+  activities      Activity[]
+}
+
+model Activity {
+  id              String         @id @default(cuid())
+  cityId          String
+  city            City           @relation(fields: [cityId], references: [id])
+  name            String
+  category        String
+  description     String?
+  costEstimate    Float          @default(0)
+  durationMinutes Int            @default(60)
+  imageUrl        String?
+  createdAt       DateTime       @default(now())
+
+  stopActivities  StopActivity[]
+}
+
+model StopActivity {
+  id            String    @id @default(cuid())
+  stopId        String
+  stop          Stop      @relation(fields: [stopId], references: [id], onDelete: Cascade)
+  activityId    String
+  activity      Activity  @relation(fields: [activityId], references: [id])
+  scheduledDate DateTime?
+  scheduledTime String?
+  actualCost    Float?
+  createdAt     DateTime  @default(now())
+}
+
+model BudgetLine {
+  id        String         @id @default(cuid())
+  tripId    String
+  trip      Trip           @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  stopId    String?
+  stop      Stop?          @relation(fields: [stopId], references: [id])
+  category  BudgetCategory
+  label     String
+  amount    Float
+  createdAt DateTime       @default(now())
+}
