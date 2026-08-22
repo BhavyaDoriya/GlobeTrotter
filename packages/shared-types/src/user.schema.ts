@@ -17,7 +17,7 @@ export const UpdateUserSchema = z.object({
   lastName: z.string().min(1).optional(),
   city: z.string().optional(),
   country: z.string().optional(),
-  avatarUrl: z.string().url().optional(),
+  avatarUrl: z.string().optional(),
 });
 
 export type RegisterDto = z.infer<typeof RegisterSchema>;

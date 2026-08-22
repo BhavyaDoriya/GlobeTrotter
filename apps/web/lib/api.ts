@@ -24,7 +24,16 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   }
 
   if (!response.ok) {
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+    let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+    try {
+      const errorData = await response.json();
+      if (errorData && errorData.message) {
+        errorMessage += ` - ${Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message}`;
+      }
+    } catch (e) {
+      // Failed to parse JSON error response
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();

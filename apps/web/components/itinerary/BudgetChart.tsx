@@ -45,6 +45,15 @@ export function BudgetChart({
     emoji: BUDGET_CATEGORY_META[bl.category]?.emoji ?? "💰",
   }));
 
+  if (totalBudget > 0 && spent < totalBudget) {
+    pieData.push({
+      name: "Remaining",
+      value: totalBudget - spent,
+      color: "#e2e8f0", // slate-200
+      emoji: "💭",
+    });
+  }
+
   const handleSetBudget = () => {
     const amount = parseFloat(budgetInput);
     if (isNaN(amount) || amount <= 0) return;
@@ -142,6 +151,12 @@ export function BudgetChart({
               <h3 className="font-extrabold text-slate-800">Spending Breakdown</h3>
             </div>
 
+            {isOverBudget && (
+              <div className="mb-4 bg-red-100 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-2">
+                <span>⚠️</span> You are over budget by {formatCurrency(spent - totalBudget)}!
+              </div>
+            )}
+
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
@@ -205,8 +220,8 @@ export function BudgetChart({
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">$</span>
                     <input
                       type="number"
-                      defaultValue={current}
-                      onBlur={(e) => onUpdateLine(cat, parseFloat(e.target.value) || 0)}
+                      value={current || ""}
+                      onChange={(e) => onUpdateLine(cat, parseFloat(e.target.value) || 0)}
                       className="w-full pl-6 pr-2 py-1.5 text-sm rounded-lg border border-slate-200
                                  focus:border-[#8CBDB9] focus:outline-none bg-slate-50 font-semibold text-slate-800"
                     />
