@@ -7,15 +7,16 @@ dist/
 .next/
 out/
 build/
+.turbo/
 
-# Environment files — NEVER commit these
+# Environment files
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Prisma — don't ignore migrations folder, only local shadow db
+# Prisma 
 *.db
 *.db-journal
 
@@ -32,9 +33,3 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-# Turbo cache
-.turbo/
-
-# pnpm
-pnpm-lock.yaml
