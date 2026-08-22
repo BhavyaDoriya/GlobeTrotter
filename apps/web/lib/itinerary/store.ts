@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Trip, StopActivity, DaySchedule } from './types';
 import { MOCK_TRIPS } from './mock-data';
+import { apiClient } from '../api-client';
 
 // ─── Store interface ──────────────────────────────────────────────────────────
 
@@ -127,7 +128,7 @@ function reassignSequentialTimes(activities: StopActivity[]): void {
 
 export const useItineraryStore = create<ItineraryStore>()(
   persist(
-    immer((set, get) => ({
+    immer((set: (fn: (state: ItineraryStore) => void) => void, get: () => ItineraryStore) => ({
       trips: MOCK_TRIPS,
 
       // ── Selectors ────────────────────────────────────────────────────────────
@@ -198,6 +199,8 @@ export const useItineraryStore = create<ItineraryStore>()(
           return {
             date,
             dayLabel: dayLabel(date),
+            stopId: trip.stops[0]?.id || '',
+            cityName: trip.stops[0]?.city?.name || 'Destination',
             activities: dayActs,
           };
         });
@@ -454,6 +457,17 @@ export const useItineraryStore = create<ItineraryStore>()(
         set((state) => {
           state.trips[id] = newTrip;
         });
+
+        // Sync with NestJS Backend API & PostgreSQL DB
+        apiClient.trips
+          .create({
+            name,
+            description: `Adventure in ${cityName}`,
+            startDate: s,
+            endDate: e,
+            isPublic: false,
+          })
+          .catch((err) => console.log('API sync info:', err.message));
 
         return id;
       },

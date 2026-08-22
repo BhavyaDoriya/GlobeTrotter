@@ -1,25 +1,59 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Globe2, Map, Camera, Luggage, Heart, Sun, Navigation } from "lucide-react";
+import { Camera, Luggage, Map, Navigation, Heart, Sun } from "lucide-react";
+import { apiClient, setAuthTokens } from "@/lib/api-client";
 
 export default function IntroAndAuthPage() {
   const router = useRouter();
   const [showIntro, setShowIntro] = useState(true);
   const [isLeaving, setIsLeaving] = useState(false);
 
+  const [email, setEmail] = useState("traveler@world.com");
+  const [password, setPassword] = useState("Password123!");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   const enterSite = () => {
     if (isLeaving) return;
     setIsLeaving(true);
-    // Wait for the exit animation to finish before removing from DOM
     setTimeout(() => setShowIntro(false), 1050);
+  };
+
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      let res;
+      try {
+        res = await apiClient.auth.login({ email, password });
+      } catch (loginErr: any) {
+        res = await apiClient.auth.register({
+          email,
+          password,
+          firstName: "Globe",
+          lastName: "Trotter",
+        });
+      }
+
+      if (res?.accessToken) {
+        setAuthTokens(res.accessToken, res.refreshToken);
+        router.push("/trips");
+      }
+    } catch (err: any) {
+      setError(err.message || "Failed to log in");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <>
-      {/* ============ CLAUDE INTRO SCENE (RECOLORED) ============ */}
+      {/* ============ INTRO SCENE ============ */}
       {showIntro && (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-1000 ease-[cubic-bezier(.6,0,.2,1)] overflow-hidden ${
@@ -53,10 +87,6 @@ export default function IntroAndAuthPage() {
 
           <div className="relative w-[min(90vw,560px)] aspect-square flex items-center justify-center">
             <div className="orbit-ring"></div>
-            
-            {/* Background Stickers mapped to your pastel palette */}
-            <svg className="sticker-float w-14 top-[2%] left-[-4%]" style={{ '--r': '-12deg', animationDelay: '0.2s' } as any} viewBox="0 0 64 64"><path d="M32 6c14 0 24 12 24 26S46 58 32 58 8 46 8 32 18 6 32 6z" fill="#F6D267"/><path d="M14 26c6-4 12 2 18-2s10-8 16-4" stroke="#E77A64" strokeWidth="3" fill="none" strokeLinecap="round"/></svg>
-            <svg className="sticker-float w-12 bottom-[6%] left-[-2%]" style={{ '--r': '8deg', animationDelay: '1.1s' } as any} viewBox="0 0 64 64"><rect x="10" y="16" width="30" height="38" rx="4" fill="#8CBDB9"/><rect x="16" y="8" width="18" height="12" rx="3" fill="#4A7C77"/><rect x="44" y="24" width="10" height="6" rx="2" fill="#E77A64"/></svg>
 
             <div className="globe-anim">
               <svg viewBox="0 0 200 200" className="w-full h-full block">
@@ -80,7 +110,6 @@ export default function IntroAndAuthPage() {
 
             <button className="enter-btn pulse-active z-50" onClick={enterSite}>
               Begin the journey
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="w-4 h-4"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
           </div>
         </div>
@@ -107,26 +136,52 @@ export default function IntroAndAuthPage() {
                 <p className="text-slate-500 font-medium">Log in to build your itinerary.</p>
               </div>
 
-              <form className="space-y-5" onSubmit={(e) => { e.preventDefault(); router.push('/'); }}>
+              {error && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-300 text-red-700 rounded-xl text-sm font-bold">
+                  {error}
+                </div>
+              )}
+
+              <form className="space-y-5" onSubmit={handleAuthSubmit}>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="email">Email Address</label>
-                  <input type="email" id="email" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="traveler@world.com" />
+                  <input
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all font-medium"
+                    placeholder="traveler@world.com"
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2" htmlFor="password">Password</label>
-                  <input type="password" id="password" className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all" placeholder="••••••••" />
+                  <input
+                    type="password"
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-[#8CBDB9] focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#8CBDB9]/20 transition-all font-medium"
+                    placeholder="••••••••"
+                    required
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between mt-2">
                   <label className="flex items-center space-x-2 cursor-pointer">
-                    <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-[#E77A64] focus:ring-[#E77A64]" />
+                    <input type="checkbox" className="w-5 h-5 rounded border-slate-300 text-[#E77A64] focus:ring-[#E77A64]" defaultChecked />
                     <span className="text-sm font-medium text-slate-600">Remember me</span>
                   </label>
                   <a href="#" className="text-sm font-bold text-[#E77A64] hover:underline hover:text-[#d66752]">Forgot password?</a>
                 </div>
 
-                <button type="submit" className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all">
-                  Let's Go! ✈️
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full mt-6 bg-[#E77A64] hover:bg-[#d66752] text-white text-lg font-bold py-4 rounded-2xl shadow-[0_8px_0_#b55140] active:shadow-[0_0px_0_#b55140] active:translate-y-2 transition-all disabled:opacity-50"
+                >
+                  {loading ? "Connecting..." : "Let's Go! ✈️"}
                 </button>
               </form>
 
@@ -139,7 +194,6 @@ export default function IntroAndAuthPage() {
           <div className="hidden lg:flex w-1/2 relative items-center justify-center perspective-1000">
             <div className="relative w-[500px] h-[500px]">
               <div className="absolute inset-0 m-auto w-96 h-96 bg-[#F6D267] rounded-full shadow-inner opacity-90"></div>
-
               <div className="absolute top-10 left-10 bg-[#8CBDB9] p-4 rounded-2xl border-[6px] border-white shadow-xl rotate-[-15deg] hover:rotate-[-5deg] hover:scale-110 transition-all duration-300 cursor-pointer">
                 <Camera size={64} className="text-white" fill="white" />
               </div>
@@ -152,12 +206,8 @@ export default function IntroAndAuthPage() {
               <div className="absolute bottom-32 right-10 bg-red-500 p-3 rounded-full border-[5px] border-white shadow-xl rotate-[-12deg] hover:scale-110 transition-all z-30">
                 <Navigation size={32} className="text-white" fill="white" />
               </div>
-              
               <div className="absolute top-0 right-1/3 bg-white p-2 rounded-full shadow-sm rotate-45">
                 <Heart size={20} className="text-pink-400" fill="#f472b6" />
-              </div>
-              <div className="absolute bottom-10 left-1/3 bg-white p-2 rounded-full shadow-sm -rotate-12">
-                 <span className="text-2xl">🌴</span>
               </div>
             </div>
           </div>

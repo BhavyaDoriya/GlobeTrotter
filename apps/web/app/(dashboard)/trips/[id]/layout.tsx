@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Compass, Camera, Navigation, MapPin } from "lucide-react";
 import { useItineraryStore } from "@/lib/itinerary/store";
 import { ItineraryHeader } from "@/components/itinerary/ItineraryHeader";
+import { apiClient } from "@/lib/api-client";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,11 +15,24 @@ export default function TripLayout({ children, params }: LayoutProps) {
   const resolvedParams = React.use(params);
   const tripId = resolvedParams.id;
 
+  const [apiTrip, setApiTrip] = useState<any>(null);
+
   const getTrip = useItineraryStore((s) => s.getTrip);
   const getTotalActivities = useItineraryStore((s) => s.getTotalActivities);
 
-  const trip = getTrip(tripId);
+  const storeTrip = getTrip(tripId);
   const totalActivities = getTotalActivities(tripId);
+
+  useEffect(() => {
+    if (!storeTrip && tripId) {
+      apiClient.trips
+        .getById(tripId)
+        .then((data) => setApiTrip(data))
+        .catch((err) => console.log("API trip layout fetch note:", err.message));
+    }
+  }, [storeTrip, tripId]);
+
+  const trip = storeTrip || apiTrip;
 
   if (!trip) {
     return (
@@ -27,15 +41,15 @@ export default function TripLayout({ children, params }: LayoutProps) {
           <div className="w-12 h-12 rounded-full bg-[#E5F0EF] flex items-center justify-center mx-auto mb-3 text-[#4A7C77]">
             <MapPin size={24} />
           </div>
-          <h2 className="text-xl font-bold font-serif text-slate-800 mb-2">Trip Not Found</h2>
+          <h2 className="text-xl font-bold font-serif text-slate-800 mb-2">Loading Trip...</h2>
           <p className="text-slate-500 text-sm font-medium mb-4">
-            No trip with ID <code className="bg-slate-100 px-2 py-0.5 rounded text-slate-700">{tripId}</code> exists.
+            Retrieving details for <code className="bg-slate-100 px-2 py-0.5 rounded text-slate-700">{tripId}</code>
           </p>
           <a
-            href="/trips/demo-trip-1/build"
+            href="/trips"
             className="inline-block px-5 py-2.5 rounded-full bg-[#4A7C77] text-white font-bold text-xs uppercase tracking-wider shadow-sm hover:bg-[#38605c] transition-colors"
           >
-            Go to Demo Trip
+            Back to Travel Log
           </a>
         </div>
       </div>
@@ -44,7 +58,6 @@ export default function TripLayout({ children, params }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-[#E5F0EF] relative overflow-x-hidden">
-      {/* Animated Background Topography / Flight Paths */}
       <div className="fixed inset-0 pointer-events-none z-0 opacity-25">
         <svg className="absolute w-[200%] h-[200%] animate-[spin_140s_linear_infinite] -top-[50%] -left-[50%]" viewBox="0 0 1000 1000">
           <circle cx="500" cy="500" r="280" fill="none" stroke="#8CBDB9" strokeWidth="1.5" strokeDasharray="12 12" />
@@ -53,7 +66,6 @@ export default function TripLayout({ children, params }: LayoutProps) {
         </svg>
       </div>
 
-      {/* Floating Background Travel Line Art */}
       <div className="fixed top-24 right-12 opacity-35 z-0 pointer-events-none hidden md:block">
         <Compass size={64} className="text-[#8CBDB9]" />
       </div>
@@ -70,7 +82,7 @@ export default function TripLayout({ children, params }: LayoutProps) {
           tripName={trip.name}
           startDate={trip.startDate}
           endDate={trip.endDate}
-          totalActivities={totalActivities}
+          totalActivities={totalActivities || trip.stops?.[0]?.stopActivities?.length || 0}
         />
         {children}
       </div>
