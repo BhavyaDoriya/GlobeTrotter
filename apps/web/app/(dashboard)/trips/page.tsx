@@ -9,7 +9,7 @@ import { Search, SlidersHorizontal, MapPin, Calendar, ArrowRight, Compass, Plane
 // Person B can import this to use on the Profile or Calendar views!
 // ==========================================
 export const TripCard = ({ 
-  id = '1',
+  id = 'demo-trip-1',
   title, 
   route, 
   dates, 

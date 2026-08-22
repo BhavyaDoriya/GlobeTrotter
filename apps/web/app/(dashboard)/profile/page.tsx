@@ -7,7 +7,7 @@ import Link from "next/link";
 
 // (Stubbing the TripCard here so the file runs stand-alone, 
 // but in reality you'd import this from your components folder!)
-const ProfileTripCard = ({ id = '1', title, route, image, status, rotation }: any) => (
+const ProfileTripCard = ({ id = 'demo-trip-1', title, route, image, status, rotation }: any) => (
   <Link href={`/trips/${id}/view`} className={`block group relative bg-white p-3 rounded-2xl shadow-lg border-[4px] border-white cursor-pointer hover:z-50 transition-all duration-300 hover:rotate-0 hover:scale-105 hover:-translate-y-2 ${rotation}`}>
     <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-white/80 backdrop-blur-md shadow-sm rotate-[3deg] z-10 transition-transform group-hover:rotate-[-2deg]"></div>
     <div className="relative w-full h-40 rounded-xl overflow-hidden mb-3 bg-slate-100">

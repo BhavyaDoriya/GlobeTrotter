@@ -128,7 +128,7 @@ export default function DashboardPage() {
                   <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Rovaniemi</span>
                 </div>
                 
-                <Link href="/trips/1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
+                <Link href="/trips/demo-trip-1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
                   Open Scrapbook
                 </Link>
               </div>
@@ -155,7 +155,7 @@ export default function DashboardPage() {
                   <span className="text-slate-300">→</span>
                   <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-lg text-sm font-bold">Zaanse Schans</span>
                 </div>
-                <Link href="/trips/2/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
+                <Link href="/trips/demo-trip-1/view" className="inline-block text-center w-full md:w-auto px-6 py-3 bg-[#4A7C77] hover:bg-[#38605c] text-white font-bold rounded-xl transition-colors shadow-md">
                   Open Scrapbook
                 </Link>
               </div>

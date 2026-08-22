@@ -35,7 +35,7 @@ export default function CreateTripPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (tripName && place) {
-      router.push("/trips/1/build");
+      router.push("/trips/demo-trip-1/build");
     }
   };
 
