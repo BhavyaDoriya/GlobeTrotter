@@ -199,9 +199,9 @@ export default function DashboardPage() {
       </main>
 
       {/* FLOATING ACTION BUTTON */}
-      <a href="/trips/new" className="fixed bottom-10 right-10 z-50 flex items-center gap-3 bg-[#E77A64] hover:bg-[#d66752] text-white text-xl font-black py-4 px-8 rounded-full border-4 border-white shadow-[0_10px_20px_rgba(231,122,100,0.4)] hover:shadow-[0_15px_30px_rgba(231,122,100,0.6)] hover:-translate-y-2 transition-all duration-300 group">
+      <button className="fixed bottom-10 right-10 z-50 flex items-center gap-3 bg-[#E77A64] hover:bg-[#d66752] text-white text-xl font-black py-4 px-8 rounded-full border-4 border-white shadow-[0_10px_20px_rgba(231,122,100,0.4)] hover:shadow-[0_15px_30px_rgba(231,122,100,0.6)] hover:-translate-y-2 transition-all duration-300 group">
         <Plus size={28} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300" /> Plan a Trip
-      </a>
+      </button>
 
     </div>
   );
